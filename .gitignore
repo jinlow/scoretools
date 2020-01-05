@@ -1,0 +1,8 @@
+
+# Folders
+/.mypy_cache
+/.vscode
+/scr_venv
+/notebooks
+__pycache__
+/scoretools.egg-info
