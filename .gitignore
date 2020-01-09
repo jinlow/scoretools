@@ -6,4 +6,5 @@
 /notebooks
 __pycache__
 /scoretools.egg-info
-/.build
+/build/
+/dist/
