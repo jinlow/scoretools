@@ -3,12 +3,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
 import itertools
-from .utils import coerce_to_iterable
-from typing import Iterable, List, Any, Optional
 
 
-def calc_ks(data: pd.DataFrame, performance: pd.Series, score: pd.Series,
-            ascending: bool) -> float:
+def calc_ks(data, performance, score, ascending):
     scr_dat = data[[score, performance]].sort_values(score,
                                                      ascending=ascending)
     tot_perf = scr_dat[performance].sum()
@@ -16,17 +13,18 @@ def calc_ks(data: pd.DataFrame, performance: pd.Series, score: pd.Series,
                scr_dat[performance].eq(0).sum())
     cuml_bd = (scr_dat[performance].eq(1).cumsum() /
                scr_dat[performance].sum())
-    return (cuml_bd - cuml_gd).max()
+    return np.max(cuml_bd - cuml_gd)
 
 
-def _prep_inputs_gplot(data: pd.DataFrame, perf: Any, score: Any,
-                       ascending: Any) -> List[tuple]:
+def _prep_inputs_gplot(data, perf, score, ascending):
     """
     Format score performance and ascending inputs for easy use in gplot function.
         Convert inputs to list of tuples, that can be iterated over.
     """
-    perf = coerce_to_iterable(perf)
-    score = coerce_to_iterable(score)
+    if isinstance(perf, str):
+        perf = [perf]
+    if isinstance(score, str):
+        score = [score]
     if isinstance(ascending, bool):
         scr_asc = zip(score, itertools.repeat(ascending))
     else:
@@ -42,9 +40,7 @@ def _prep_inputs_gplot(data: pd.DataFrame, perf: Any, score: Any,
     return [scr_perf[i] for i in ks_order]
 
 
-def _prep_data_gplot(data: pd.DataFrame, dof: Optional[float],
-                     exceptions: Optional[Iterable], perf: Iterable,
-                     score: Iterable, ascending: Any) -> pd.DataFrame:
+def _prep_data_gplot(data, dof, exceptions, perf, score, ascending):
     ps = data[[perf, score]]
     if exceptions is not None:
         ps = ps[~ps[score].isin(exceptions)]
@@ -57,12 +53,7 @@ def _prep_data_gplot(data: pd.DataFrame, dof: Optional[float],
     return ps
 
 
-def gplot(data: pd.DataFrame,
-          performance: Any,
-          score: Any,
-          ascending: Any = True,
-          exceptions: List = None,
-          dof: float = None):
+def gplot(data, performance, score, ascending=True, exceptions=None, dof=None):
     """
     Create a Gplot or Cumulative Gains chart
     
@@ -72,12 +63,12 @@ def gplot(data: pd.DataFrame,
         A dataframe that contains the performance, and score fields
         that will be plotted.
 
-    performance : string or iterable of strings.  
+    performance : string or iterable.  
         The names of the performance fields that will be used to create
         the plot. These should be binary variables where 1 is the target
         label.
 
-    score : string or iterable of strings.
+    score : string or iterable.  
         The names of the score fields that will be used to create
         the plot.
 
