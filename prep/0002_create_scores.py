@@ -30,9 +30,6 @@ scr2 = m2.predict_log_proba(X)[:, 0]
 
 # Scale Scores [300 to 900]
 def scale_dat(vals, vmin, vmax, digit=0):
-    """
-    Scale Scores
-    """
     svals = (vals - np.min(vals)) / (np.max(vals) - np.min(vals))
     svals = svals * (vmax - vmin) + vmin
     svals = np.around(svals, decimals=digit)
@@ -49,9 +46,15 @@ import seaborn as sns
 sns.kdeplot(scr1, label="Scr1")
 sns.kdeplot(scr2, label="Scr2")
 plt.legend()
+plt.show()
 
 # Write out score data
 df["scr1"] = scr1
 df["scr2"] = scr2
 
 df.to_csv("data/score_test_dat.csv", index=False)
+
+# Write out raw data with scores
+dfr = pd.read_csv("data/train.csv")
+dfr = dfr.drop(labels=["Ticket", "Name"], axis=1)
+dfr.to_csv("data/score_test_dat_raw.csv", index=False)
