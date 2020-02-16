@@ -1,6 +1,9 @@
 import pandas as pd
 import xlsxwriter as xlsx
+import sys
 import os
+import shlex
+import warnings
 
 
 class TableWriter:
@@ -25,11 +28,13 @@ class TableWriter:
         assert not_file, f"{filename} exists in directory, and overwrite = False"
 
         self.workbook = xlsx.Workbook(filename=filename, **kwargs)
+        self.closed = False
 
     def close(self):
         """
         Close workbook, and output contents.
         """
+        self.closed = True
         self.workbook.close()
 
     def _add_worksheet(self, sheetname: str):
@@ -95,7 +100,6 @@ class TableWriter:
         }
 
         dfrmt = self.workbook.add_format(dfrmt_f)
-        print("working4")
         if sheetname is None:
             try:
                 worksheet = self.workbook.worksheets()[0]
@@ -119,3 +123,24 @@ class TableWriter:
             for rs in range(len(tbl.index)):
                 worksheet.write(rs + row + 1, cs + col, tbl.iloc[cs, rs], dfrmt)
 
+    def open_file(self):
+        """
+        Open the created workbook.
+
+        If the workbook has not been closed it will be closed and 
+        written by default.
+        Currently supported for windows or macOS.
+        """
+        if not self.closed:
+            self.close()
+
+        sys_plaform = sys.platform.lower()
+
+        if sys_plaform == "darwin":
+            open_cmd = "open " + shlex.quote(self.workbook.filename)
+            os.system(open_cmd)
+        elif sys_plaform == "windows":
+            open_cmd = self.workbook.filename
+            os.system(open_cmd)
+        else:
+            warnings.warn("open_file() not supported on this OS.")

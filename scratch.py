@@ -107,7 +107,7 @@ wb = scoretools.TableWriter("test.xlsx", overwrite=True)
 wb.write_table(tbl, 1, 1)
 wb.write_table(tbl, 9, 1, index=False)
 wb.close()
-open_file(wb.workbook)
+wb.open_file()
 
 import os
 
