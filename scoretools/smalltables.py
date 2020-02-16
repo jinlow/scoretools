@@ -103,7 +103,7 @@ def bivar(data,
               that define the bin edges of the `main_var` to break on.
 
     """
-    pass
+    ...
 
 
 def single_bivar(data: pd.DataFrame,
