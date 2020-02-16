@@ -95,16 +95,16 @@ class TableWriter:
         }
 
         dfrmt = self.workbook.add_format(dfrmt_f)
-
+        print("working4")
         if sheetname is None:
             try:
-                worksheet = self.workbook.get_worksheet_by_name(
-                    self.workbook.worksheets()[0]
-                )
+                worksheet = self.workbook.worksheets()[0]
             except IndexError:
-                worksheet = self.workbook.add_worksheet(sheetname)
-        elif sheetname not in self.workbook.worksheets():
+                worksheet = self.workbook.add_worksheet()
+        elif sheetname not in [ws.get_name() for ws in self.workbook.worksheets()]:
             worksheet = self._add_worksheet(sheetname)
+        else:
+            worksheet = self.workbook.get_worksheet_by_name(sheetname)
 
         if index:
             self._write_index(tbl, worksheet, row, col, frmt)

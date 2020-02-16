@@ -92,19 +92,26 @@ workbook.close()
 
 open_file(workbook)
 
+import scoretools
+import pandas as pd
+from importlib import reload
 
-wb = sts.TableWriter("test.xlsx", overwrite=True)
+reload(scoretools.excel)
+reload(scoretools)
 
+
+df = pd.read_csv("data/score_test_dat_raw.csv")
+tbl = scoretools.single_bivar(df, "Embarked", "Survived", fillna="Missing")
+
+wb = scoretools.TableWriter("test.xlsx", overwrite=True)
 wb.write_table(tbl, 1, 1)
-
+wb.write_table(tbl, 9, 1, index=False)
 wb.close()
+open_file(wb.workbook)
 
 import os
 
 
 def open_file(wb):
     os.system(f"open {wb.filename}")
-
-
-open_file(wb.workbook)
 
