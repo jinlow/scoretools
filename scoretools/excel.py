@@ -49,8 +49,7 @@ class TableWriter:
         Write index as first column, if multi-index, write out
         each index.
         """
-        index_levels = tbl.index.nlevels
-        if index_levels > 1:
+        if tbl.index.nlevels > 1:
             for i, nm in enumerate(tbl.index.names):
                 worksheet.write(row, (col + i), nm, frmt)
             for rs, d_row in enumerate(tbl.index):
@@ -125,7 +124,7 @@ class TableWriter:
         # Write out data
         for cs in range(len(tbl.columns)):
             for rs in range(len(tbl.index)):
-                worksheet.write(rs + row + 1, cs + col, tbl.iloc[rs, cs], self.dfrmt)
+                worksheet.write(rs + row + 1, cs + col, tbl.iat[rs, cs], self.dfrmt)
 
     def open_file(self):
         """
