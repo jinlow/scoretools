@@ -108,10 +108,3 @@ wb.write_table(tbl, 1, 1)
 wb.write_table(tbl, 9, 1, index=False)
 wb.close()
 wb.open_file()
-
-import os
-
-
-def open_file(wb):
-    os.system(f"open {wb.filename}")
-

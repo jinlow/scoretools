@@ -22,13 +22,8 @@ def breaks(x, breaks, exceptions=None, **kwargs):
     x_cut: pandas Series
     """
     if exceptions:
-        assert any([i in exceptions
-                    for i in breaks]), "breaks present in exceptions"
-    x_cut = pd.cut(x,
-                   bins=breaks,
-                   duplicates='drop',
-                   include_lowest=True,
-                   **kwargs)
+        assert any([i in exceptions for i in breaks]), "breaks present in exceptions"
+    x_cut = pd.cut(x, bins=breaks, duplicates="drop", include_lowest=True, **kwargs)
     try:
         cat_levs = x_cut.cat.categories
     except AttributeError:

@@ -7,20 +7,19 @@ from .utils import coerce_to_iterable
 from typing import Iterable, List, Any, Optional
 
 
-def calc_ks(data: pd.DataFrame, performance: pd.Series, score: pd.Series,
-            ascending: bool) -> float:
-    scr_dat = data[[score, performance]].sort_values(score,
-                                                     ascending=ascending)
+def calc_ks(
+    data: pd.DataFrame, performance: pd.Series, score: pd.Series, ascending: bool
+) -> float:
+    scr_dat = data[[score, performance]].sort_values(score, ascending=ascending)
     tot_perf = scr_dat[performance].sum()
-    cuml_gd = (scr_dat[performance].eq(0).cumsum() /
-               scr_dat[performance].eq(0).sum())
-    cuml_bd = (scr_dat[performance].eq(1).cumsum() /
-               scr_dat[performance].sum())
+    cuml_gd = scr_dat[performance].eq(0).cumsum() / scr_dat[performance].eq(0).sum()
+    cuml_bd = scr_dat[performance].eq(1).cumsum() / scr_dat[performance].sum()
     return (cuml_bd - cuml_gd).max()
 
 
-def _prep_inputs_gplot(data: pd.DataFrame, perf: Any, score: Any,
-                       ascending: Any) -> List[tuple]:
+def _prep_inputs_gplot(
+    data: pd.DataFrame, perf: Any, score: Any, ascending: Any
+) -> List[tuple]:
     """
     Format score performance and ascending inputs for easy use in gplot function.
         Convert inputs to list of tuples, that can be iterated over.
@@ -30,21 +29,26 @@ def _prep_inputs_gplot(data: pd.DataFrame, perf: Any, score: Any,
     if isinstance(ascending, bool):
         scr_asc = zip(score, itertools.repeat(ascending))
     else:
-        assert len(score) == len(ascending), (
-            "ascending must be the same length as score, or of length 1")
+        assert len(score) == len(
+            ascending
+        ), "ascending must be the same length as score, or of length 1"
         scr_asc = zip(score, itertools.cycle(ascending))
     scr_perf = [(i, *j) for i, j in itertools.product(perf, scr_asc)]
     ks_list = map(lambda x: calc_ks(data, *x), scr_perf)
     ks_order = [
-        i for (v, i) in sorted(((v, i) for (i, v) in enumerate(ks_list)),
-                               reverse=True)
+        i for (v, i) in sorted(((v, i) for (i, v) in enumerate(ks_list)), reverse=True)
     ]
     return [scr_perf[i] for i in ks_order]
 
 
-def _prep_data_gplot(data: pd.DataFrame, dof: Optional[float],
-                     exceptions: Optional[Iterable], perf: Iterable,
-                     score: Iterable, ascending: Any) -> pd.DataFrame:
+def _prep_data_gplot(
+    data: pd.DataFrame,
+    dof: Optional[float],
+    exceptions: Optional[Iterable],
+    perf: Iterable,
+    score: Iterable,
+    ascending: Any,
+) -> pd.DataFrame:
     ps = data[[perf, score]]
     if exceptions is not None:
         ps = ps[~ps[score].isin(exceptions)]
@@ -57,12 +61,14 @@ def _prep_data_gplot(data: pd.DataFrame, dof: Optional[float],
     return ps
 
 
-def gplot(data: pd.DataFrame,
-          performance: Any,
-          score: Any,
-          ascending: Any = True,
-          exceptions: List = None,
-          dof: float = None):
+def gplot(
+    data: pd.DataFrame,
+    performance: Any,
+    score: Any,
+    ascending: Any = True,
+    exceptions: List = None,
+    dof: float = None,
+):
     """
     Create a Gplot or Cumulative Gains chart
     
@@ -104,19 +110,16 @@ def gplot(data: pd.DataFrame,
     fig, ax = plt.subplots()
     for inpt in inpts:
         pdat = _prep_data_gplot(data, dof, exceptions, *inpt)
-        ax.plot("pct_file",
-                "cuml_perf",
-                data=pdat,
-                label=f"{inpt[1]}<>{inpt[0]}")
-    ax.plot("pct_file", "pct_file", ":", data=pdat, label='', color='gray')
-    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5), frameon=False)
+        ax.plot("pct_file", "cuml_perf", data=pdat, label=f"{inpt[1]}<>{inpt[0]}")
+    ax.plot("pct_file", "pct_file", ":", data=pdat, label="", color="gray")
+    ax.legend(loc="center left", bbox_to_anchor=(1, 0.5), frameon=False)
     ax.xaxis.set_major_formatter(mtick.PercentFormatter(1.0))
     ax.yaxis.set_major_formatter(mtick.PercentFormatter(1.0))
     plt.xlabel("Cuml % of File")
     plt.ylabel("Cuml % of Bad")
     if dof is not None:
-        plt.gca().set_aspect("auto", adjustable='box')
+        plt.gca().set_aspect("auto", adjustable="box")
     else:
-        plt.gca().set_aspect('equal', adjustable='box')
+        plt.gca().set_aspect("equal", adjustable="box")
     plt.grid(True, alpha=0.40)
     return ax

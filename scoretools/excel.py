@@ -18,6 +18,8 @@ class TableWriter:
     overwrite: bool.
         If a file exists at filename, should it be overwritten?
         Default is set to False.
+
+    **kwargs: other arguments to be passed to xlsxwriter.Workbook.
     """
 
     def __init__(self, filename: str, overwrite: bool = False, **kwargs):
@@ -28,20 +30,19 @@ class TableWriter:
         assert not_file, f"{filename} exists in directory, and overwrite = False"
 
         self.workbook = xlsx.Workbook(filename=filename, **kwargs)
+        # Create standard formats for index and data
+        self.frmt = self.workbook.add_format(
+            {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#e5d9fc"}
+        )
+        self.dfrmt = self.workbook.add_format({"font_name": "calibri", "border": 1})
         self.closed = False
 
     def close(self):
         """
         Close workbook, and output contents.
         """
-        self.closed = True
         self.workbook.close()
-
-    def _add_worksheet(self, sheetname: str):
-        """
-        Add worksheet to workbook.
-        """
-        self.workbook.worksheet(sheetname)
+        self.closed = True
 
     def _write_index(self, tbl, worksheet, row, col, frmt=None):
         """
@@ -58,6 +59,8 @@ class TableWriter:
         col: int = 0,
         sheetname: str = None,
         index: bool = True,
+        data_fmt=None,
+        header_fmt=None,
     ):
         """
         Write a single pandas DataFrame.
@@ -82,57 +85,49 @@ class TableWriter:
         
         index: bool,
             Indicates if the table index should be written as the first
-            row. Default is set to True.
-        """
-        frmt_f = {
-            "bold": True,
-            "font_name": "calibri",
-            "border": 1,
-            "bg_color": "#e5d9fc",
-        }
+            column. Default is set to True.
 
-        frmt = self.workbook.add_format(frmt_f)
+        data_fmt: xlsxwriter Format.
+            Format used when writing out the data of the table.
+        
+        header_fmt: xlsxwriter Format.
+            Format used for writing out the header and index.
+        """
 
         # Create Data format
-        dfrmt_f = {
-            "font_name": "calibri",
-            "border": 1,
-        }
 
-        dfrmt = self.workbook.add_format(dfrmt_f)
         if sheetname is None:
             try:
                 worksheet = self.workbook.worksheets()[0]
             except IndexError:
                 worksheet = self.workbook.add_worksheet()
         elif sheetname not in [ws.get_name() for ws in self.workbook.worksheets()]:
-            worksheet = self._add_worksheet(sheetname)
+            worksheet = self.workbook.add_worksheet(sheetname)
         else:
             worksheet = self.workbook.get_worksheet_by_name(sheetname)
-
         if index:
-            self._write_index(tbl, worksheet, row, col, frmt)
+            self._write_index(tbl, worksheet, row, col, self.frmt)
             col += 1
 
         # Write header
         for cs, d_col in enumerate(tbl.columns):
-            worksheet.write((row), (cs + col), d_col, frmt)
+            worksheet.write((row), (cs + col), d_col, self.frmt)
 
         # Write out data
         for cs in range(len(tbl.columns)):
             for rs in range(len(tbl.index)):
-                worksheet.write(rs + row + 1, cs + col, tbl.iloc[cs, rs], dfrmt)
+                worksheet.write(rs + row + 1, cs + col, tbl.iloc[cs, rs], self.dfrmt)
 
     def open_file(self):
         """
         Open the created workbook.
 
         If the workbook has not been closed it will be closed and 
-        written by default.
-        Currently supported for windows or macOS.
+        written by default. Currently supported for windows or macOS.
         """
         if not self.closed:
             self.close()
+            self.closed = True
 
         sys_plaform = sys.platform.lower()
 

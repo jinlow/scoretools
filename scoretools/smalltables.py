@@ -32,9 +32,12 @@ def freq_tab(variable, data=None, fillna="Missing", na_last=False):
         var_series = data[variable]
     na_last = "last" if na_last else "first"
     dropna = True if fillna is None else False
-    freq_tab = var_series.value_counts(
-        dropna=dropna).rename("Frequency").sort_index(
-            na_position=na_last).to_frame()
+    freq_tab = (
+        var_series.value_counts(dropna=dropna)
+        .rename("Frequency")
+        .sort_index(na_position=na_last)
+        .to_frame()
+    )
     freq_tab["Percent"] = freq_tab["Frequency"] / freq_tab["Frequency"].sum()
     freq_tab["Cumulative Frequency"] = freq_tab["Frequency"].cumsum()
     freq_tab["Cumulative Percent"] = freq_tab["Percent"].cumsum()
@@ -43,15 +46,17 @@ def freq_tab(variable, data=None, fillna="Missing", na_last=False):
     return freq_tab
 
 
-def bivar(data,
-          main_var,
-          bivars=None,
-          extra_vars=None,
-          dropna=False,
-          na_last=False,
-          break_method='none',
-          break_args='none',
-          exceptions=None):
+def bivar(
+    data,
+    main_var,
+    bivars=None,
+    extra_vars=None,
+    dropna=False,
+    na_last=False,
+    break_method="none",
+    break_args="none",
+    exceptions=None,
+):
     """
     Create a bivariate table
 
@@ -106,11 +111,7 @@ def bivar(data,
     ...
 
 
-def single_bivar(data: pd.DataFrame,
-                 main_var,
-                 bivar,
-                 fillna="Missing",
-                 na_last=False):
+def single_bivar(data: pd.DataFrame, main_var, bivar, fillna="Missing", na_last=False):
     """
     Single Bivar function
     
