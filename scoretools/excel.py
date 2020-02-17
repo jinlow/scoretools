@@ -46,11 +46,20 @@ class TableWriter:
 
     def _write_index(self, tbl, worksheet, row, col, frmt=None):
         """
-        Write index as first column
+        Write index as first column, if multi-index, write out
+        each index.
         """
-        worksheet.write(row, col, "", frmt)
-        for rs, d_row in enumerate(tbl.index):
-            worksheet.write((rs + row + 1), (col), d_row, frmt)
+        index_levels = tbl.index.nlevels
+        if index_levels > 1:
+            for i, nm in enumerate(tbl.index.names):
+                worksheet.write(row, (col + i), nm, frmt)
+            for rs, d_row in enumerate(tbl.index):
+                for i, idx in enumerate(d_row):
+                    worksheet.write((rs + row + 1), (col + i), idx, frmt)
+        else:
+            worksheet.write(row, col, tbl.index.name, frmt)
+            for rs, d_row in enumerate(tbl.index):
+                worksheet.write((rs + row + 1), (col), d_row, frmt)
 
     def write_table(
         self,
@@ -95,7 +104,6 @@ class TableWriter:
         """
 
         # Create Data format
-
         if sheetname is None:
             try:
                 worksheet = self.workbook.worksheets()[0]
@@ -105,9 +113,10 @@ class TableWriter:
             worksheet = self.workbook.add_worksheet(sheetname)
         else:
             worksheet = self.workbook.get_worksheet_by_name(sheetname)
+
         if index:
             self._write_index(tbl, worksheet, row, col, self.frmt)
-            col += 1
+            col += tbl.index.nlevels
 
         # Write header
         for cs, d_col in enumerate(tbl.columns):
@@ -116,7 +125,7 @@ class TableWriter:
         # Write out data
         for cs in range(len(tbl.columns)):
             for rs in range(len(tbl.index)):
-                worksheet.write(rs + row + 1, cs + col, tbl.iloc[cs, rs], self.dfrmt)
+                worksheet.write(rs + row + 1, cs + col, tbl.iloc[rs, cs], self.dfrmt)
 
     def open_file(self):
         """

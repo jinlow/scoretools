@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def freq_tab(variable, data=None, fillna="Missing", na_last=False):
+def freq_tab(variable, data=None, fillna="Missing", na_last=False, use_name=True):
     """
     Create a Simple Frequency table
 
@@ -20,6 +20,9 @@ def freq_tab(variable, data=None, fillna="Missing", na_last=False):
     na_last: bool.
         Indicator for if NA values should be placed first or last in the
         table.
+
+    use_name: bool.
+        Use the name of the series to name the table.
 
     Returns
     -------
@@ -43,6 +46,8 @@ def freq_tab(variable, data=None, fillna="Missing", na_last=False):
     freq_tab["Cumulative Percent"] = freq_tab["Percent"].cumsum()
     freq_tab = freq_tab.rename_axis(variable)
     freq_tab.index = freq_tab.index.fillna(fillna)
+    if use_name:
+        freq_tab.index = freq_tab.index.rename(variable)
     return freq_tab
 
 
@@ -111,7 +116,9 @@ def bivar(
     ...
 
 
-def single_bivar(data: pd.DataFrame, main_var, bivar, fillna="Missing", na_last=False):
+def single_bivar(
+    data: pd.DataFrame, main_var, bivar, fillna="Missing", na_last=False, use_name=True
+):
     """
     Single Bivar function
     
@@ -138,6 +145,13 @@ def single_bivar(data: pd.DataFrame, main_var, bivar, fillna="Missing", na_last=
     na_last: boolean.
         A boolean value that specifies if the missing value should
         be placed first or last in the table.
+
+    use_name: bool.
+        Use the name of the series to name the table.
+
+    Returns
+    -------
+
     """
     gdat = data[[main_var, bivar]]
     if fillna is not None:
@@ -163,4 +177,6 @@ def single_bivar(data: pd.DataFrame, main_var, bivar, fillna="Missing", na_last=
     tab_tot = bdat.sum().to_frame().T.rename(index={0: "Total"})
     tab_tot[f"{bivar} Rate"] = data[bivar].mean()
     bdat_f = pd.concat([bdat, tab_tot])
+    if use_name:
+        bdat_f.index = bdat_f.index.rename(main_var)
     return bdat_f
