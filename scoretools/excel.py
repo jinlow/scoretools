@@ -23,37 +23,65 @@ class TableWriter:
         If a file exists at filename, should it be overwritten?
         Default is set to False.
 
+    workbook: xlsxwriter.WorkBook.
+        Alternativly to creating a workbook object, the table writer
+        class could be initialized with a pre-existing xlsxwriter 
+        workbook object.
+
     **kwargs: other arguments to be passed to xlsxwriter.Workbook.
     """
 
-    def __init__(self, filename: str = None, overwrite: bool = False, **kwargs):
+    def __init__(
+        self,
+        filename: str = None,
+        overwrite: bool = False,
+        workbook: xlsx.Workbook = None,
+        **kwargs,
+    ):
+        if workbook is not None:
+            assert not workbook.fileclosed, "Workbook supplied must not be closed."
+            self._workbook = workbook
         # Create temporary file if no filename is given
-        if filename is None:
-            tmp_filename = tempfile.NamedTemporaryFile(
-                prefix="TableWriter_Temp_", suffix=".xlsx"
-            )
-            self.workbook = xlsx.Workbook(filename=tmp_filename.name, **kwargs)
         else:
-            if overwrite:
-                not_file = True
+            if filename is None:
+                tmp_filename = tempfile.NamedTemporaryFile(
+                    prefix="TableWriter_Temp_", suffix=".xlsx"
+                )
+                self._workbook = xlsx.Workbook(filename=tmp_filename.name, **kwargs)
             else:
-                not_file = not os.path.isfile(filename)
-            assert not_file, f"{filename} exists in directory, and overwrite = False"
-            self.workbook = xlsx.Workbook(filename=filename, **kwargs)
+                if overwrite:
+                    not_file = True
+                else:
+                    not_file = not os.path.isfile(filename)
+                assert (
+                    not_file
+                ), f"{filename} exists in directory, and overwrite = False"
+                self._workbook = xlsx.Workbook(filename=filename, **kwargs)
 
         # Create standard formats for index and data
-        self.frmt = self.workbook.add_format(
+        self.frmt = self._workbook.add_format(
             {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#e5d9fc"}
         )
-        self.dfrmt = self.workbook.add_format({"font_name": "calibri", "border": 1})
+        self.dfrmt = self._workbook.add_format({"font_name": "calibri", "border": 1})
         self.closed = False
+
+    def add_worksheet(self, name=None):
+        """
+        Add a worksheet to the workbook.
+
+        Parameters
+        ----------
+        name: Str.
+            Optional worksheet name, defaults to Sheet1.
+        """
+        self._workbook.add_worksheet(name)
 
     def close(self):
         """
         Close workbook, and output contents.
         """
-        self.workbook.close()
-        atexit.register(os.remove, self.workbook.filename)
+        self._workbook.close()
+        atexit.register(os.remove, self._workbook.filename)
         self.closed = True
 
     def _write_index(self, tbl, worksheet, row, col, frmt=None):
@@ -114,16 +142,16 @@ class TableWriter:
             Format used for writing out the header and index.
         """
 
-        # Create Data format
+        # Process Sheet
         if sheetname is None:
             try:
-                worksheet = self.workbook.worksheets()[0]
+                worksheet = self._workbook.worksheets()[0]
             except IndexError:
-                worksheet = self.workbook.add_worksheet()
-        elif sheetname not in [ws.get_name() for ws in self.workbook.worksheets()]:
-            worksheet = self.workbook.add_worksheet(sheetname)
+                worksheet = self._workbook.add_worksheet()
+        elif sheetname not in [ws.get_name() for ws in self._workbook.worksheets()]:
+            worksheet = self._workbook.add_worksheet(sheetname)
         else:
-            worksheet = self.workbook.get_worksheet_by_name(sheetname)
+            worksheet = self._workbook.get_worksheet_by_name(sheetname)
 
         if index:
             self._write_index(tbl, worksheet, row, col, self.frmt)
@@ -152,10 +180,10 @@ class TableWriter:
         sys_plaform = sys.platform.lower()
 
         if sys_plaform == "darwin":
-            open_cmd = "open " + shlex.quote(self.workbook.filename)
+            open_cmd = "open " + shlex.quote(self._workbook.filename)
             os.system(open_cmd)
         elif sys_plaform == "windows":
-            open_cmd = self.workbook.filename
+            open_cmd = self._workbook.filename
             os.system(open_cmd)
         else:
             warnings.warn("open_file() not supported on this OS.")
