@@ -4,6 +4,8 @@ import sys
 import os
 import shlex
 import warnings
+import tempfile
+import atexit
 
 
 class TableWriter:
@@ -14,6 +16,8 @@ class TableWriter:
     ----------
     workbook: str.
         Path to write excel file to.
+        Default is set to None, in which case a temporary file is created
+        to write to.
 
     overwrite: bool.
         If a file exists at filename, should it be overwritten?
@@ -22,14 +26,21 @@ class TableWriter:
     **kwargs: other arguments to be passed to xlsxwriter.Workbook.
     """
 
-    def __init__(self, filename: str, overwrite: bool = False, **kwargs):
-        if overwrite:
-            not_file = True
+    def __init__(self, filename: str = None, overwrite: bool = False, **kwargs):
+        # Create temporary file if no filename is given
+        if filename is None:
+            tmp_filename = tempfile.NamedTemporaryFile(
+                prefix="TableWriter_Temp_", suffix=".xlsx"
+            )
+            self.workbook = xlsx.Workbook(filename=tmp_filename.name, **kwargs)
         else:
-            not_file = not os.path.isfile(filename)
-        assert not_file, f"{filename} exists in directory, and overwrite = False"
+            if overwrite:
+                not_file = True
+            else:
+                not_file = not os.path.isfile(filename)
+            assert not_file, f"{filename} exists in directory, and overwrite = False"
+            self.workbook = xlsx.Workbook(filename=filename, **kwargs)
 
-        self.workbook = xlsx.Workbook(filename=filename, **kwargs)
         # Create standard formats for index and data
         self.frmt = self.workbook.add_format(
             {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#e5d9fc"}
@@ -42,6 +53,7 @@ class TableWriter:
         Close workbook, and output contents.
         """
         self.workbook.close()
+        atexit.register(os.remove, self.workbook.filename)
         self.closed = True
 
     def _write_index(self, tbl, worksheet, row, col, frmt=None):

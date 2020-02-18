@@ -104,10 +104,12 @@ df = pd.read_csv("data/score_test_dat_raw.csv")
 tbl = scoretools.single_bivar(df, "Embarked", "Survived", fillna="Missing")
 tbl2 = df.groupby(["Pclass", "Survived"])[["Fare", "Age"]].sum()
 
-wb = scoretools.TableWriter("test.xlsx", overwrite=True)
+wb = scoretools.TableWriter("test2.xlsx")
+
+wb = scoretools.TableWriter()
 wb.write_table(tbl, 1, 1)
 wb.write_table(tbl2, 9, 1)
-wb.close()
+wb.write_table(tbl2, 9, 6)
 wb.open_file()
 
 # Multi-index table
