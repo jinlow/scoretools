@@ -50,7 +50,7 @@ tbl = sts.single_bivar(df, "Embarked", "Survived", fillna="Missing")
 import xlsxwriter
 
 # Create a workbook and add a worksheet.
-workbook = xlsxwriter.Workbook("Expenses01.xlsx")
+workbook = xlsxwriter.Workbook("test.xlsx")
 worksheet = workbook.add_worksheet("tables")
 
 # Make formates
@@ -106,8 +106,12 @@ tbl2 = df.groupby(["Pclass", "Survived"])[["Fare", "Age"]].sum()
 
 # wb = scoretools.TableWriter("test2.xlsx")
 # twb = xlsxwriter.Workbook("test.xlsx")
+# wb = scoretools.TableWriter(options={"nan_inf_to_errors": True})
 wb = scoretools.TableWriter()
-wb.write_table(tbl, 1, 1)
+hfmrt = wb.create_format(
+    {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#d3daea"}
+)
+wb.write_table(tbl, 1, 1, header_fmt=hfmrt)
 wb.write_table(tbl2, 9, 1)
 wb.write_table(tbl2, 9, 6)
 # Add another worksheet

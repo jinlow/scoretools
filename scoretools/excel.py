@@ -65,6 +65,21 @@ class TableWriter:
         self.dfrmt = self._workbook.add_format({"font_name": "calibri", "border": 1})
         self.closed = False
 
+    def create_format(self, properties=None):
+        """
+        Create format to be used in tables.
+
+        Parameters
+        ----------
+        properties: dict.
+            The format properties.
+
+        Returns
+        -------
+        Reference to the Format object.
+        """
+        return self._workbook.add_format(properties)
+
     def add_worksheet(self, name=None):
         """
         Add a worksheet to the workbook.
@@ -107,8 +122,8 @@ class TableWriter:
         col: int = 0,
         sheetname: str = None,
         index: bool = True,
-        data_fmt=None,
-        header_fmt=None,
+        data_fmt: xlsx.format = None,
+        header_fmt: xlsx.format = None,
     ):
         """
         Write a single pandas DataFrame.
@@ -135,10 +150,10 @@ class TableWriter:
             Indicates if the table index should be written as the first
             column. Default is set to True.
 
-        data_fmt: xlsxwriter Format.
+        data_fmt: xlsxwriter.format.
             Format used when writing out the data of the table.
         
-        header_fmt: xlsxwriter Format.
+        header_fmt: xlsxwriter.format.
             Format used for writing out the header and index.
         """
 
@@ -153,18 +168,22 @@ class TableWriter:
         else:
             worksheet = self._workbook.get_worksheet_by_name(sheetname)
 
+        # Process format
+        data_fmt = self.dfrmt if data_fmt is None else data_fmt
+        header_fmt = self.frmt if header_fmt is None else header_fmt
+
         if index:
-            self._write_index(tbl, worksheet, row, col, self.frmt)
+            self._write_index(tbl, worksheet, row, col, header_fmt)
             col += tbl.index.nlevels
 
         # Write header
         for cs, d_col in enumerate(tbl.columns):
-            worksheet.write((row), (cs + col), d_col, self.frmt)
+            worksheet.write((row), (cs + col), d_col, header_fmt)
 
         # Write out data
         for cs in range(len(tbl.columns)):
             for rs in range(len(tbl.index)):
-                worksheet.write(rs + row + 1, cs + col, tbl.iat[rs, cs], self.dfrmt)
+                worksheet.write(rs + row + 1, cs + col, tbl.iat[rs, cs], data_fmt)
 
     def open_file(self):
         """
