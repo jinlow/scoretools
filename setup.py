@@ -7,10 +7,6 @@ setuptools.setup(
     author_email="james.d.inlow@gmail.com",
     description="Tools for testing the value of credit scores.",
     packages=setuptools.find_packages(),
-    install_requires=[
-        'pandas',
-        'numpy',
-        'matplotlib',
-    ],
-    python_requires='>=3.6',
+    install_requires=["pandas", "numpy", "matplotlib", "xlsxwriter"],
+    python_requires=">=3.6",
 )

@@ -25,7 +25,9 @@ sts.freq_tab("Embarked", data=df, fillna="Missing")
 sts.freq_tab("Embarked", data=df, fillna="", na_last=True)
 
 # Break Methods
-sts.utils.break_methods.bins(x=df["Age"], bins=4).value_counts(sort=False, dropna=False)
+sts.utils.break_methods.bins(x=df["Age"], bins=4).value_counts(
+    sort=False, dropna=False
+)
 
 sts.utils.break_methods.breaks(x=df.Age, breaks=[1, 22, 50, 100]).value_counts(
     sort=False, dropna=False
@@ -57,7 +59,12 @@ worksheet = workbook.add_worksheet("tables")
 font = "calibri"
 
 # Create format dictionaries
-header_fd = {"bold": True, "font_name": font, "border": 1, "bg_color": "#e5d9fc"}
+header_fd = {
+    "bold": True,
+    "font_name": font,
+    "border": 1,
+    "bg_color": "#e5d9fc",
+}
 
 content_fd = {
     "font_name": font,
@@ -109,16 +116,20 @@ tbl2 = df.groupby(["Pclass", "Survived"])[["Fare", "Age"]].sum()
 # wb = scoretools.TableWriter(options={"nan_inf_to_errors": True})
 wb = scoretools.TableWriter()
 hfmrt = wb.create_format(
-    {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#d3daea"}
+    {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#e5d9fc"}
 )
 wb.write_table(tbl, 1, 1, header_fmt=hfmrt)
+
 wb.write_table(tbl2, 9, 1)
 wb.write_table(tbl2, 9, 6)
 # Add another worksheet
-wb.add_worksheet("AnotherSheet")
+worksheet = wb._workbook.add_worksheet("AnotherSheet")
 wb.write_table(tbl, 1, 1, sheetname="AnotherSheet")
+worksheet.conditional_format(
+    2, 3, 6, 3, {"type": "3_color_scale"},
+)
 
-wb.open_file()
+wb.open_file()  
 
 # Multi-index table
 test = df.groupby(["Survived", "Pclass"]).sum()

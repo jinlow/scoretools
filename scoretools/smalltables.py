@@ -1,7 +1,9 @@
 import pandas as pd
 
 
-def freq_tab(variable, data=None, fillna="Missing", na_last=False, use_name=True):
+def freq_tab(
+    variable, data=None, fillna="Missing", na_last=False, use_name=True
+):
     """
     Create a Simple Frequency table
 
@@ -117,7 +119,12 @@ def bivar(
 
 
 def single_bivar(
-    data: pd.DataFrame, main_var, bivar, fillna="Missing", na_last=False, use_name=True
+    data: pd.DataFrame,
+    main_var,
+    bivar,
+    fillna="Missing",
+    na_last=False,
+    use_name=True,
 ):
     """
     Single Bivar function

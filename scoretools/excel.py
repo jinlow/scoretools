@@ -6,6 +6,7 @@ import shlex
 import warnings
 import tempfile
 import atexit
+from typing import Optional
 
 
 class TableWriter:
@@ -16,7 +17,7 @@ class TableWriter:
     ----------
     workbook: str.
         Path to write excel file to.
-        Default is set to None, in which case a temporary file is created
+        Default is set to None, in which case a temporary file is created 
         to write to.
 
     overwrite: bool.
@@ -29,17 +30,36 @@ class TableWriter:
         workbook object.
 
     **kwargs: other arguments to be passed to xlsxwriter.Workbook.
+
+    Examples
+    --------
+    Create a new workbook
+    >>> tab_wb = TableWriter("Example_file.xlsx")
+
+    Using a pre-existing workbook object
+    >>> wb = xlsxwriter.Workbook(filename="Example_file.xlsx")
+    >>> tab_wb = TableWriter(workbook=wb)
+
+    Write out a pandas dataframe
+    >>> import pandas as pd
+    >>> df = pd.DataFrame({"A": [1, 2, 3], "B": [1, 2, 3]})
+    >>> tab_wb.write_table(df, 1, 1)
+
+    Open excel document
+    >>> tab_wb.open_file()
     """
 
     def __init__(
         self,
-        filename: str = None,
+        filename: Optional[str] = None,
         overwrite: bool = False,
-        workbook: xlsx.Workbook = None,
+        workbook: Optional[xlsx.Workbook] = None,
         **kwargs,
     ):
         if workbook is not None:
-            assert not workbook.fileclosed, "Workbook supplied must not be closed."
+            assert (
+                not workbook.fileclosed
+            ), "Workbook supplied must not be closed."
             self._workbook = workbook
         # Create temporary file if no filename is given
         else:
@@ -47,7 +67,9 @@ class TableWriter:
                 tmp_filename = tempfile.NamedTemporaryFile(
                     prefix="TableWriter_Temp_", suffix=".xlsx"
                 )
-                self._workbook = xlsx.Workbook(filename=tmp_filename.name, **kwargs)
+                self._workbook = xlsx.Workbook(
+                    filename=tmp_filename.name, **kwargs
+                )
             else:
                 if overwrite:
                     not_file = True
@@ -60,9 +82,18 @@ class TableWriter:
 
         # Create standard formats for index and data
         self.frmt = self._workbook.add_format(
-            {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#e5d9fc"}
+            {
+                "bold": True,
+                "font_name": "calibri",
+                "border": 1,
+                "bg_color": "#d3daea",
+            }
         )
-        self.dfrmt = self._workbook.add_format({"font_name": "calibri", "border": 1})
+        self.dfrmt = self._workbook.add_format(
+            {"font_name": "calibri", "border": 1}
+        )
+        self.row = 0
+        self.col = 0
         self.closed = False
 
     def create_format(self, properties=None):
@@ -118,8 +149,8 @@ class TableWriter:
     def write_table(
         self,
         tbl: pd.DataFrame,
-        row: int = 0,
-        col: int = 0,
+        row: Optional[int] = None,
+        col: Optional[int] = None,
         sheetname: str = None,
         index: bool = True,
         data_fmt: xlsx.format = None,
@@ -134,10 +165,13 @@ class TableWriter:
             Table to write to excel sheet.
 
         row: int.
-            The starting row to write the table to. Zero indexed.
+            The starting row to write the table to. Zero indexed. Default
+            is zero. When one table is written, the default will change
+            to one cell below the written table
 
         col: int.
-            The starting column to write the table to. Zero indexed.
+            The starting column to write the table to. Zero indexed. Default
+            is zero.
         
         sheetname: str.
             The name of the sheet to write the table to. If the
@@ -157,13 +191,18 @@ class TableWriter:
             Format used for writing out the header and index.
         """
 
+        row = self.row if row is None else row
+        col = self.col if col is None else col
+
         # Process Sheet
         if sheetname is None:
             try:
                 worksheet = self._workbook.worksheets()[0]
             except IndexError:
                 worksheet = self._workbook.add_worksheet()
-        elif sheetname not in [ws.get_name() for ws in self._workbook.worksheets()]:
+        elif sheetname not in [
+            ws.get_name() for ws in self._workbook.worksheets()
+        ]:
             worksheet = self._workbook.add_worksheet(sheetname)
         else:
             worksheet = self._workbook.get_worksheet_by_name(sheetname)
@@ -172,18 +211,26 @@ class TableWriter:
         data_fmt = self.dfrmt if data_fmt is None else data_fmt
         header_fmt = self.frmt if header_fmt is None else header_fmt
 
+        # Write data
+        self._write_data(tbl, row, col, index, worksheet, header_fmt, data_fmt)
+
+    def _write_data(
+        self, tbl, row, col, index, worksheet, header_fmt, data_fmt
+    ):
         if index:
             self._write_index(tbl, worksheet, row, col, header_fmt)
             col += tbl.index.nlevels
 
         # Write header
         for cs, d_col in enumerate(tbl.columns):
-            worksheet.write((row), (cs + col), d_col, header_fmt)
+            worksheet.write(row, (cs + col), d_col, header_fmt)
+        # Increment row number
+        row += 1
 
         # Write out data
         for cs in range(len(tbl.columns)):
             for rs in range(len(tbl.index)):
-                worksheet.write(rs + row + 1, cs + col, tbl.iat[rs, cs], data_fmt)
+                worksheet.write(rs + row, cs + col, tbl.iat[rs, cs], data_fmt)
 
     def open_file(self):
         """
