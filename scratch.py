@@ -127,8 +127,10 @@ worksheet = wb._workbook.add_worksheet("AnotherSheet")
 worksheet.conditional_format(
     2, 3, 6, 3, {"type": "3_color_scale"},
 )
-wb.write_table(tbl, 1, 1, sheetname="AnotherSheet")
-
+wb.write_table(tbl, 0, 1, sheetname="AnotherSheet")
+wb.write_table(tbl, sheetname="AnotherSheet")
+wb.write_table(tbl2, sheetname="AnotherSheet")
+wb.write_table(tbl, sheetname="AnotherSheet")
 
 wb.open_file()
 

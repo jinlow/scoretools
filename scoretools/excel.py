@@ -218,6 +218,7 @@ class TableWriter:
     def _write_data(
         self, tbl, row, col, index, worksheet, header_fmt, data_fmt
     ):
+        self.col = col
         if index:
             self._write_index(tbl, worksheet, row, col, header_fmt)
             col += tbl.index.nlevels
@@ -233,8 +234,8 @@ class TableWriter:
             for rs in range(len(tbl.index)):
                 worksheet.write(rs + row, cs + col, tbl.iat[rs, cs], data_fmt)
 
-        self.row = row + self.between + 1
-        self.col = col
+        row += tbl.shape[0]
+        self.row = row + self.between
 
     def open_file(self):
         """
