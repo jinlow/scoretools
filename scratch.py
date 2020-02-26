@@ -124,12 +124,13 @@ wb.write_table(tbl2, 9, 1)
 wb.write_table(tbl2, 9, 6)
 # Add another worksheet
 worksheet = wb._workbook.add_worksheet("AnotherSheet")
-wb.write_table(tbl, 1, 1, sheetname="AnotherSheet")
 worksheet.conditional_format(
     2, 3, 6, 3, {"type": "3_color_scale"},
 )
+wb.write_table(tbl, 1, 1, sheetname="AnotherSheet")
 
-wb.open_file()  
+
+wb.open_file()
 
 # Multi-index table
 test = df.groupby(["Survived", "Pclass"]).sum()

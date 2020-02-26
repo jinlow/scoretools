@@ -94,6 +94,7 @@ class TableWriter:
         )
         self.row = 0
         self.col = 0
+        self.between = 2
         self.closed = False
 
     def create_format(self, properties=None):
@@ -231,6 +232,9 @@ class TableWriter:
         for cs in range(len(tbl.columns)):
             for rs in range(len(tbl.index)):
                 worksheet.write(rs + row, cs + col, tbl.iat[rs, cs], data_fmt)
+
+        self.row = row + self.between + 1
+        self.col = col
 
     def open_file(self):
         """
