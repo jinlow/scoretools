@@ -6,7 +6,9 @@ import shlex
 import warnings
 import tempfile
 import atexit
-from typing import Optional
+import numpy as np
+from typing import Optional, Iterable
+from .utils import FormatHandler
 
 
 class TableWriter:
@@ -154,6 +156,7 @@ class TableWriter:
         col: Optional[int] = None,
         sheetname: str = None,
         index: bool = True,
+        cond_fmt_cols: Optional[Iterable] = None,
         data_fmt: xlsx.format = None,
         header_fmt: xlsx.format = None,
     ):
@@ -195,33 +198,49 @@ class TableWriter:
         row = self.row if row is None else row
         col = self.col if col is None else col
 
-        # Process Sheet
-        if sheetname is None:
-            try:
-                worksheet = self._workbook.worksheets()[0]
-            except IndexError:
-                worksheet = self._workbook.add_worksheet()
-        elif sheetname not in [
-            ws.get_name() for ws in self._workbook.worksheets()
-        ]:
-            worksheet = self._workbook.add_worksheet(sheetname)
-        else:
-            worksheet = self._workbook.get_worksheet_by_name(sheetname)
+        worksheet = self._handle_worksheet(sheetname=sheetname)
 
         # Process format
         data_fmt = self.dfrmt if data_fmt is None else data_fmt
         header_fmt = self.frmt if header_fmt is None else header_fmt
 
         # Write data
-        self._write_data(tbl, row, col, index, worksheet, header_fmt, data_fmt)
+        self._write_data(
+            tbl=tbl,
+            row=row,
+            col=col,
+            index=index,
+            worksheet=worksheet,
+            header_fmt=header_fmt,
+            data_fmt=data_fmt,
+            cond_fmt_cols=cond_fmt_cols,
+        )
 
     def _write_data(
-        self, tbl, row, col, index, worksheet, header_fmt, data_fmt
+        self,
+        tbl,
+        row,
+        col,
+        index,
+        worksheet,
+        header_fmt,
+        data_fmt,
+        cond_fmt_cols,
     ):
         self.col = col
         if index:
             self._write_index(tbl, worksheet, row, col, header_fmt)
             col += tbl.index.nlevels
+
+        # Handle conditional format column
+        if cond_fmt_cols is not None:
+            apply_conditional_fmts(
+                tbl=tbl,
+                cond_fmt_cols=cond_fmt_cols,
+                col=col,
+                row=row,
+                worksheet=worksheet,
+            )
 
         # Write header
         for cs, d_col in enumerate(tbl.columns):
@@ -236,6 +255,23 @@ class TableWriter:
 
         row += tbl.shape[0]
         self.row = row + self.between
+
+    def _handle_worksheet(self, sheetname):
+        """
+        Handle creation or selection of worksheet.
+        """
+        if sheetname is None:
+            try:
+                worksheet = self._workbook.worksheets()[0]
+            except IndexError:
+                worksheet = self._workbook.add_worksheet()
+        elif sheetname not in [
+            ws.get_name() for ws in self._workbook.worksheets()
+        ]:
+            worksheet = self._workbook.add_worksheet(sheetname)
+        else:
+            worksheet = self._workbook.get_worksheet_by_name(sheetname)
+        return worksheet
 
     def open_file(self):
         """
@@ -258,3 +294,21 @@ class TableWriter:
             os.system(open_cmd)
         else:
             warnings.warn("open_file() not supported on this OS.")
+
+
+# Extra
+def apply_conditional_fmts(tbl, cond_fmt_cols, col, row, worksheet):
+    """
+    Apply conditional formats
+    """
+    cond_cols = np.array(cond_fmt_cols) + col
+    cond_row_start = row
+    cond_row_end = tbl.shape[0] + row
+    for cond_col in cond_cols:
+        worksheet.conditional_format(
+            cond_row_start,
+            cond_col,
+            cond_row_end,
+            cond_col,
+            {"type": "3_color_scale"},
+        )

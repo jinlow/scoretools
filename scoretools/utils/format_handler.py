@@ -15,7 +15,6 @@ class FormatHandler:
         header_color="#e5d9fc",
         font="calibri",
         pct_keys=r"percent|pct|%|rate",
-        cond_fmt_cols=None,
         header_fmt=None,
         data_fmt=None,
     ):
@@ -23,29 +22,8 @@ class FormatHandler:
         self.header_color = header_color
         self.font = font
         self.pct_keys = pct_keys.lower()
-        self.cond_fmt_cols = None
         self.header_fmt = header_fmt
         self.data_fmt = data_fmt
-
-    def apply_conditional_fmts(self, tbl, row, col, worksheet):
-        """
-        Apply conditional formats
-        """
-        cond_cols = self.cond_fmt_cols + col
-
-        for cond_col in cond_cols:
-            # Get rows indexes
-            cond_row_start = row
-            cond_row_end = tbl.shape[0] + row
-
-            # Write out conditional format
-            worksheet.conditional_format(
-                cond_row_start,
-                cond_col,
-                cond_row_end,
-                cond_col,
-                {"type": "3_color_scale"},
-            )
 
     def header_format(self):
         """
