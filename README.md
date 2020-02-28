@@ -4,8 +4,8 @@ This package houses simple, commonly used functions for creating analytic report
 ## Writing Output to Excel  
 Excel documents are a common method of delivering results across business verticals. Being able to output tables and results to excel needs to be easy and reproducible. Part of this package is aimed specifically at being able to quickly output pandas DataFrames to excel with flexible formatting options.
 
-The main tool for writing tables is the `TableWriter` class.
-For example:
+The main tool for writing tables is the `TableWriter` class.  
+For example...
 ```python
 import scoretools
 import pandas as pd

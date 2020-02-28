@@ -98,6 +98,7 @@ class TableWriter:
         self.col = 0
         self.between = 2
         self.closed = False
+        self.old_sheetname = None
 
     def create_format(self, properties=None):
         """
@@ -195,10 +196,16 @@ class TableWriter:
             Format used for writing out the header and index.
         """
 
+        worksheet = self._handle_worksheet(sheetname=sheetname)
+
+        if (self.old_sheetname != worksheet.get_name()) and (
+            self.old_sheetname is not None
+        ):
+            self.row = 0
+            self.col = 0
+
         row = self.row if row is None else row
         col = self.col if col is None else col
-
-        worksheet = self._handle_worksheet(sheetname=sheetname)
 
         # Process format
         data_fmt = self.dfrmt if data_fmt is None else data_fmt
@@ -215,6 +222,8 @@ class TableWriter:
             data_fmt=data_fmt,
             cond_fmt_cols=cond_fmt_cols,
         )
+
+        self.old_sheetname = worksheet.get_name()
 
     def _write_data(
         self,
@@ -234,7 +243,7 @@ class TableWriter:
 
         # Handle conditional format column
         if cond_fmt_cols is not None:
-            apply_conditional_fmts(
+            self.apply_conditional_fmts(
                 tbl=tbl,
                 cond_fmt_cols=cond_fmt_cols,
                 col=col,
@@ -284,31 +293,30 @@ class TableWriter:
             self.close()
             self.closed = True
 
-        sys_plaform = sys.platform.lower()
+        sys_platform = sys.platform.lower()
 
-        if sys_plaform == "darwin":
+        if sys_platform == "darwin":
             open_cmd = "open " + shlex.quote(self._workbook.filename)
             os.system(open_cmd)
-        elif sys_plaform == "windows":
+        elif sys_platform == "windows":
             open_cmd = self._workbook.filename
             os.system(open_cmd)
         else:
             warnings.warn("open_file() not supported on this OS.")
 
-
-# Extra
-def apply_conditional_fmts(tbl, cond_fmt_cols, col, row, worksheet):
-    """
-    Apply conditional formats
-    """
-    cond_cols = np.array(cond_fmt_cols) + col
-    cond_row_start = row
-    cond_row_end = tbl.shape[0] + row
-    for cond_col in cond_cols:
-        worksheet.conditional_format(
-            cond_row_start,
-            cond_col,
-            cond_row_end,
-            cond_col,
-            {"type": "3_color_scale"},
-        )
+    @staticmethod
+    def apply_conditional_fmts(tbl, cond_fmt_cols, col, row, worksheet):
+        """
+        Apply conditional formats
+        """
+        cond_cols = np.array(cond_fmt_cols) + col
+        cond_row_start = row
+        cond_row_end = tbl.shape[0] + row
+        for cond_col in cond_cols:
+            worksheet.conditional_format(
+                cond_row_start,
+                cond_col,
+                cond_row_end,
+                cond_col,
+                {"type": "3_color_scale"},
+            )

@@ -70,12 +70,22 @@ wb.write_table(tbl, 1, 1, header_fmt=hfmrt)
 wb.write_table(tbl2, 9, 1)
 wb.write_table(tbl2, 9, 6)
 # Add another worksheet
-worksheet = wb._workbook.add_worksheet("AnotherSheet")
-wb.write_table(tbl, 0, 1, sheetname="AnotherSheet")
+worksheet = wb.add_worksheet("AnotherSheet")
+wb.write_table(tbl, 1, 1, sheetname="AnotherSheet")
 wb.write_table(tbl, sheetname="AnotherSheet")
 wb.write_table(tbl2, sheetname="AnotherSheet")
 wb.write_table(tbl2, sheetname="AnotherSheet", index=False)
 wb.write_table(tbl, sheetname="AnotherSheet", cond_fmt_cols=[0, 4])
+
+wb.write_table(tbl, sheetname="newSheet")
+wb.write_table(tbl2, sheetname="newSheet")
+wb.write_table(tbl2, sheetname="newSheet", index=False)
+wb.write_table(tbl, sheetname="newSheet", cond_fmt_cols=[0, 4])
+
+wb.write_table(tbl, 2, 2, sheetname="newSheet1")
+
+wb.write_table(tbl, sheetname="newSheet3")
+
 
 wb.open_file()
 
