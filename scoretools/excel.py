@@ -298,7 +298,7 @@ class TableWriter:
         if sys_platform == "darwin":
             open_cmd = "open " + shlex.quote(self._workbook.filename)
             os.system(open_cmd)
-        elif sys_platform == "windows":
+        elif sys_platform == "win32":
             open_cmd = self._workbook.filename
             os.system(open_cmd)
         else:
