@@ -17,7 +17,7 @@ class TableWriter:
 
     Parameters
     ----------
-    workbook: str.
+    filename: str.
         Path to write excel file to.
         Default is set to None, in which case a temporary file is created 
         to write to.
@@ -35,12 +35,16 @@ class TableWriter:
 
     Examples
     --------
+
+    If no filename is provided, a temporary file will be created to write to.
+    >>> tab_wb = sts.TableWriter()
+
     Create a new workbook
-    >>> tab_wb = TableWriter("Example_file.xlsx")
+    >>> tab_wb = sts.TableWriter("Example_file.xlsx")
 
     Using a pre-existing workbook object
     >>> wb = xlsxwriter.Workbook(filename="Example_file.xlsx")
-    >>> tab_wb = TableWriter(workbook=wb)
+    >>> tab_wb = sts.TableWriter(workbook=wb)
 
     Write out a pandas dataframe
     >>> import pandas as pd
@@ -83,22 +87,72 @@ class TableWriter:
                 self._workbook = xlsx.Workbook(filename=filename, **kwargs)
 
         # Create standard formats for index and data
-        self.frmt = self._workbook.add_format(
-            {
-                "bold": True,
-                "font_name": "calibri",
-                "border": 1,
-                "bg_color": "#d3daea",
-            }
-        )
-        self.dfrmt = self._workbook.add_format(
-            {"font_name": "calibri", "border": 1}
-        )
+        fmt_handler = FormatHandler(workbook=self._workbook)
+        self.frmt = fmt_handler.header_format()
+        self.dfrmt = fmt_handler.data_format()
         self.row = 0
         self.col = 0
         self.between = 2
         self.closed = False
         self.old_sheetname = None
+
+    def default_format(
+        self,
+        header_color="#e5d9fc",
+        font="calibri",
+        pct_keys=r"percent|pct|%|rate",
+        header_fmt=None,
+        data_fmt=None,
+    ):
+        """
+        Create default format to be used in tables
+
+        Allows user to specify easily defined format options to be used in 
+        the tables, or a custom format created with TableWriter.create_format.
+
+        Parameters
+        ----------
+        header_color: string.
+            Specify the color to use for the background of the index
+            and header. This can be a string name of the color, i.e. blue,
+            or the color as a hex value, for example "#e5d9fc" for purple.
+            Default is set to blue, "#d3daea".
+
+        font: string.
+            Specify the font to be used. This is the name of any font
+            allowable by excel.
+            Default is set to "calibri".
+        
+        pct_keys: regular expression or stirng.
+            Column names, or a regular expression used to search
+            the column names to automatically format strings as
+            percents. Case is ignored.
+            Default is set to r"percent|pct|%|rate".
+
+        header_fmt: XlsxWriter Format.
+            Alternativly a format can be set directly to use as the default
+            format for the header data. If this is set, the above 
+            parameters are ignored.
+            Default is set to None.
+
+        data_fmt: XlsxWriter Format.
+            Alternativly a format can be set directly to use as the default
+            format for the table content data. If this is set, the above 
+            parameters are ignored.
+            Default is set to None.
+
+        """
+        fmt_handler = FormatHandler(
+            workbook=self._workbook,
+            header_color=header_color,
+            font=font,
+            pct_keys=pct_keys,
+            header_fmt=header_fmt,
+            data_fmt=data_fmt,
+        )
+
+        self.frmt = fmt_handler.header_format()
+        self.dfrmt = fmt_handler.data_format()
 
     def create_format(self, properties=None):
         """
@@ -107,7 +161,9 @@ class TableWriter:
         Parameters
         ----------
         properties: dict.
-            The format properties.
+            The format properties to be passed to the XlsxWriter function
+            add_format. Reference XlsxWriter add_format() documentation
+            for details.
 
         Returns
         -------
@@ -126,30 +182,7 @@ class TableWriter:
         """
         self._workbook.add_worksheet(name)
 
-    def close(self):
-        """
-        Close workbook, and output contents.
-        """
-        self._workbook.close()
-        atexit.register(os.remove, self._workbook.filename)
-        self.closed = True
-
-    def _write_index(self, tbl, worksheet, row, col, frmt=None):
-        """
-        Write index as first column, if multi-index, write out
-        each index.
-        """
-        if tbl.index.nlevels > 1:
-            for i, nm in enumerate(tbl.index.names):
-                worksheet.write(row, (col + i), nm, frmt)
-            for rs, d_row in enumerate(tbl.index):
-                for i, idx in enumerate(d_row):
-                    worksheet.write((rs + row + 1), (col + i), idx, frmt)
-        else:
-            worksheet.write(row, col, tbl.index.name, frmt)
-            for rs, d_row in enumerate(tbl.index):
-                worksheet.write((rs + row + 1), (col), d_row, frmt)
-
+    # Table Writing
     def write_table(
         self,
         tbl: pd.DataFrame,
@@ -225,6 +258,22 @@ class TableWriter:
 
         self.old_sheetname = worksheet.get_name()
 
+    def _write_index(self, tbl, worksheet, row, col, frmt=None):
+        """
+        Write index as first column, if multi-index, write out
+        each index.
+        """
+        if tbl.index.nlevels > 1:
+            for i, nm in enumerate(tbl.index.names):
+                worksheet.write(row, (col + i), nm, frmt)
+            for rs, d_row in enumerate(tbl.index):
+                for i, idx in enumerate(d_row):
+                    worksheet.write((rs + row + 1), (col + i), idx, frmt)
+        else:
+            worksheet.write(row, col, tbl.index.name, frmt)
+            for rs, d_row in enumerate(tbl.index):
+                worksheet.write((rs + row + 1), (col), d_row, frmt)
+
     def _write_data(
         self,
         tbl,
@@ -282,6 +331,7 @@ class TableWriter:
             worksheet = self._workbook.get_worksheet_by_name(sheetname)
         return worksheet
 
+    # Output workbook
     def open_file(self):
         """
         Open the created workbook.
@@ -303,6 +353,14 @@ class TableWriter:
             os.system(open_cmd)
         else:
             warnings.warn("open_file() not supported on this OS.")
+
+    def close(self):
+        """
+        Close workbook, and output contents.
+        """
+        self._workbook.close()
+        atexit.register(os.remove, self._workbook.filename)
+        self.closed = True
 
     @staticmethod
     def apply_conditional_fmts(tbl, cond_fmt_cols, col, row, worksheet):

@@ -12,7 +12,7 @@ class FormatHandler:
     def __init__(
         self,
         workbook: xlsx.Workbook,
-        header_color="#e5d9fc",
+        header_color="#d3daea",
         font="calibri",
         pct_keys=r"percent|pct|%|rate",
         header_fmt=None,
@@ -58,6 +58,9 @@ class FormatHandler:
         """
         Get the indexes of the percent columns
         """
-        pct_bool = pd.Series(tbl.columns).str.contains(self.pct_keys)
-        pct_idx = np.where(pct_bool)[0]
+        if self.pct_keys is None:
+            pct_idx = None
+        else:
+            pct_bool = pd.Series(tbl.columns).str.contains(self.pct_keys)
+            pct_idx = np.where(pct_bool)[0]
         return pct_idx

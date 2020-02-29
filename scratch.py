@@ -77,6 +77,8 @@ wb.write_table(tbl2, sheetname="AnotherSheet")
 wb.write_table(tbl2, sheetname="AnotherSheet", index=False)
 wb.write_table(tbl, sheetname="AnotherSheet", cond_fmt_cols=[0, 4])
 
+wb.default_format(header_color="#e5d9fc", font="Times New Roman")
+
 wb.write_table(tbl, sheetname="newSheet")
 wb.write_table(tbl2, sheetname="newSheet")
 wb.write_table(tbl2, sheetname="newSheet", index=False)
@@ -85,7 +87,6 @@ wb.write_table(tbl, sheetname="newSheet", cond_fmt_cols=[0, 4])
 wb.write_table(tbl, 2, 2, sheetname="newSheet1")
 
 wb.write_table(tbl, sheetname="newSheet3")
-
 
 wb.open_file()
 
