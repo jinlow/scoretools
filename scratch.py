@@ -73,6 +73,7 @@ wb.write_table(tbl, 1, 1, header_fmt=hfmrt, pct_keys=None)
 # new_frmt.set_num_format(10)
 wb.write_table(tbl2, 9, 1)
 wb.write_table(tbl, 9, 6)
+
 # Add another worksheet
 worksheet = wb.add_worksheet("AnotherSheet")
 wb.write_table(tbl, 1, 1, sheetname="AnotherSheet")

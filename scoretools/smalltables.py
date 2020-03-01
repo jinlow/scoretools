@@ -160,8 +160,12 @@ def single_bivar(
     -------
 
     """
-    gdat = data[[main_var, bivar]]
+    gdat = data[[main_var, bivar]].copy()
     if fillna is not None:
+        if gdat[main_var].dtype.name == "category":
+            gdat[main_var] = gdat[main_var].cat.add_categories(
+                new_categories=fillna
+            )
         gdat = gdat.fillna(value={main_var: fillna})
     else:
         gdat = gdat.dropna(subset=[main_var]).copy()
