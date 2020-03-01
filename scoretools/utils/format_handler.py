@@ -14,14 +14,12 @@ class FormatHandler:
         workbook: xlsx.Workbook,
         header_color="#d3daea",
         font="calibri",
-        pct_keys=r"percent|pct|%|rate",
         header_fmt=None,
         data_fmt=None,
     ):
         self.workbook = workbook
         self.header_color = header_color
         self.font = font
-        self.pct_keys = pct_keys.lower()
         self.header_fmt = header_fmt
         self.data_fmt = data_fmt
 
@@ -53,14 +51,3 @@ class FormatHandler:
                 {"font_name": self.font, "border": 1,}
             )
         return fmt
-
-    def get_percent_cols(self, tbl):
-        """
-        Get the indexes of the percent columns
-        """
-        if self.pct_keys is None:
-            pct_idx = None
-        else:
-            pct_bool = pd.Series(tbl.columns).str.contains(self.pct_keys)
-            pct_idx = np.where(pct_bool)[0]
-        return pct_idx

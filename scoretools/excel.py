@@ -7,6 +7,7 @@ import warnings
 import tempfile
 import atexit
 import numpy as np
+import copy
 from typing import Optional, Iterable
 from .utils import FormatHandler
 
@@ -90,6 +91,7 @@ class TableWriter:
         fmt_handler = FormatHandler(workbook=self._workbook)
         self.frmt = fmt_handler.header_format()
         self.dfrmt = fmt_handler.data_format()
+        self.dfrmt_pct = self._create_pct_fmt(self.dfrmt)
         self.row = 0
         self.col = 0
         self.between = 2
@@ -100,7 +102,6 @@ class TableWriter:
         self,
         header_color="#e5d9fc",
         font="calibri",
-        pct_keys=r"percent|pct|%|rate",
         header_fmt=None,
         data_fmt=None,
     ):
@@ -122,12 +123,6 @@ class TableWriter:
             Specify the font to be used. This is the name of any font
             allowable by excel.
             Default is set to "calibri".
-        
-        pct_keys: regular expression or stirng.
-            Column names, or a regular expression used to search
-            the column names to automatically format strings as
-            percents. Case is ignored.
-            Default is set to r"percent|pct|%|rate".
 
         header_fmt: XlsxWriter Format.
             Alternativly a format can be set directly to use as the default
@@ -146,13 +141,14 @@ class TableWriter:
             workbook=self._workbook,
             header_color=header_color,
             font=font,
-            pct_keys=pct_keys,
             header_fmt=header_fmt,
             data_fmt=data_fmt,
         )
 
         self.frmt = fmt_handler.header_format()
         self.dfrmt = fmt_handler.data_format()
+        # Set pct format
+        self.dfrmt_pct = self._create_pct_fmt(self.dfrmt)
 
     def create_format(self, properties=None):
         """
@@ -170,6 +166,51 @@ class TableWriter:
         Reference to the Format object.
         """
         return self._workbook.add_format(properties)
+
+    @staticmethod
+    def _apply_conditional_fmts(tbl, cond_fmt_cols, col, row, worksheet):
+        """
+        Apply conditional formats
+        """
+        cond_cols = np.array(cond_fmt_cols) + col
+        cond_row_start = row
+        cond_row_end = tbl.shape[0] + row
+        for cond_col in cond_cols:
+            worksheet.conditional_format(
+                cond_row_start,
+                cond_col,
+                cond_row_end,
+                cond_col,
+                {"type": "3_color_scale"},
+            )
+
+    @staticmethod
+    def _get_percent_cols(tbl, pct_keys):
+        """
+        Get the indexes of the percent columns
+        """
+        if pct_keys is None:
+            pct_idx = np.array([])
+        else:
+            pct_bool = pd.Series(tbl.columns).str.contains(pct_keys, case=False)
+            pct_idx = np.where(pct_bool)[0]
+        return pct_idx
+
+    def _copy_format(self, fmt):
+        properties = [f[4:] for f in dir(fmt) if f[0:4] == "set_"]
+        dft_fmt = self._workbook.add_format()
+        return self._workbook.add_format(
+            {
+                k: v
+                for k, v in fmt.__dict__.items()
+                if k in properties and dft_fmt.__dict__[k] != v
+            }
+        )
+
+    def _create_pct_fmt(self, fmt):
+        dfrmt_pct = self._copy_format(fmt)
+        dfrmt_pct.set_num_format(10)
+        return dfrmt_pct
 
     def add_worksheet(self, name=None):
         """
@@ -191,6 +232,7 @@ class TableWriter:
         sheetname: str = None,
         index: bool = True,
         cond_fmt_cols: Optional[Iterable] = None,
+        pct_keys=r"percent|pct|%|rate",
         data_fmt: xlsx.format = None,
         header_fmt: xlsx.format = None,
     ):
@@ -222,20 +264,23 @@ class TableWriter:
             Indicates if the table index should be written as the first
             column. Default is set to True.
 
+        cond_fmt_cols: iterable.
+            Column indexes that conditional formating should be applied to.
+
+        pct_keys: regular expression or stirng.
+            A regular expression used to search
+            the column names to automatically format strings as
+            percents. Case is ignored. Set to None to ignore percent
+            formatting for all columns.
+            Default is set to r"percent|pct|%|rate".
+
         data_fmt: xlsxwriter.format.
             Format used when writing out the data of the table.
         
         header_fmt: xlsxwriter.format.
             Format used for writing out the header and index.
         """
-
         worksheet = self._handle_worksheet(sheetname=sheetname)
-
-        if (self.old_sheetname != worksheet.get_name()) and (
-            self.old_sheetname is not None
-        ):
-            self.row = 0
-            self.col = 0
 
         row = self.row if row is None else row
         col = self.col if col is None else col
@@ -243,6 +288,12 @@ class TableWriter:
         # Process format
         data_fmt = self.dfrmt if data_fmt is None else data_fmt
         header_fmt = self.frmt if header_fmt is None else header_fmt
+
+        # Add percent version of data format
+        if pct_keys is not None and data_fmt is not None:
+            data_fmt_pct = self._create_pct_fmt(data_fmt)
+        else:
+            data_fmt_pct = self.dfrmt_pct
 
         # Write data
         self._write_data(
@@ -254,6 +305,8 @@ class TableWriter:
             header_fmt=header_fmt,
             data_fmt=data_fmt,
             cond_fmt_cols=cond_fmt_cols,
+            pct_keys=pct_keys,
+            data_fmt_pct=data_fmt_pct,
         )
 
         self.old_sheetname = worksheet.get_name()
@@ -284,6 +337,8 @@ class TableWriter:
         header_fmt,
         data_fmt,
         cond_fmt_cols,
+        pct_keys,
+        data_fmt_pct,
     ):
         self.col = col
         if index:
@@ -292,7 +347,7 @@ class TableWriter:
 
         # Handle conditional format column
         if cond_fmt_cols is not None:
-            self.apply_conditional_fmts(
+            self._apply_conditional_fmts(
                 tbl=tbl,
                 cond_fmt_cols=cond_fmt_cols,
                 col=col,
@@ -306,10 +361,19 @@ class TableWriter:
         # Increment row number
         row += 1
 
+        # Get percent columns
+        pct_idxs = self._get_percent_cols(tbl=tbl, pct_keys=pct_keys)
         # Write out data
         for cs in range(len(tbl.columns)):
             for rs in range(len(tbl.index)):
-                worksheet.write(rs + row, cs + col, tbl.iat[rs, cs], data_fmt)
+                if cs in pct_idxs:
+                    worksheet.write(
+                        rs + row, cs + col, tbl.iat[rs, cs], data_fmt_pct
+                    )
+                else:
+                    worksheet.write(
+                        rs + row, cs + col, tbl.iat[rs, cs], data_fmt
+                    )
 
         row += tbl.shape[0]
         self.row = row + self.between
@@ -329,6 +393,14 @@ class TableWriter:
             worksheet = self._workbook.add_worksheet(sheetname)
         else:
             worksheet = self._workbook.get_worksheet_by_name(sheetname)
+
+        # Reset default rows and column if new worksheet.
+        if (self.old_sheetname != worksheet.get_name()) and (
+            self.old_sheetname is not None
+        ):
+            self.row = 0
+            self.col = 0
+
         return worksheet
 
     # Output workbook
@@ -361,20 +433,3 @@ class TableWriter:
         self._workbook.close()
         atexit.register(os.remove, self._workbook.filename)
         self.closed = True
-
-    @staticmethod
-    def apply_conditional_fmts(tbl, cond_fmt_cols, col, row, worksheet):
-        """
-        Apply conditional formats
-        """
-        cond_cols = np.array(cond_fmt_cols) + col
-        cond_row_start = row
-        cond_row_end = tbl.shape[0] + row
-        for cond_col in cond_cols:
-            worksheet.conditional_format(
-                cond_row_start,
-                cond_col,
-                cond_row_end,
-                cond_col,
-                {"type": "3_color_scale"},
-            )

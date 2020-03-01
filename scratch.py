@@ -62,13 +62,17 @@ tbl2 = df.groupby(["Pclass", "Survived"])[["Fare", "Age"]].sum()
 # twb = xlsxwriter.Workbook("test.xlsx")
 # wb = scoretools.TableWriter(options={"nan_inf_to_errors": True})
 wb = scoretools.TableWriter()
+wb.write_table(tbl2, 9, 1)
 hfmrt = wb.create_format(
     {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#e5d9fc"}
 )
-wb.write_table(tbl, 1, 1, header_fmt=hfmrt)
+wb.write_table(tbl, 1, 1, header_fmt=hfmrt, pct_keys=None)
 
+# dfrmt = wb.create_format({"font_name": "Times New Roman", "border": 1})
+# new_frmt = wb._copy_format(dfrmt)
+# new_frmt.set_num_format(10)
 wb.write_table(tbl2, 9, 1)
-wb.write_table(tbl2, 9, 6)
+wb.write_table(tbl, 9, 6)
 # Add another worksheet
 worksheet = wb.add_worksheet("AnotherSheet")
 wb.write_table(tbl, 1, 1, sheetname="AnotherSheet")
@@ -85,6 +89,7 @@ wb.write_table(tbl2, sheetname="newSheet", index=False)
 wb.write_table(tbl, sheetname="newSheet", cond_fmt_cols=[0, 4])
 
 wb.write_table(tbl, 2, 2, sheetname="newSheet1")
+wb.write_table(tbl, sheetname="newSheet1")
 
 wb.write_table(tbl, sheetname="newSheet3")
 
