@@ -166,7 +166,10 @@ def single_bivar(
             gdat[main_var] = gdat[main_var].cat.add_categories(
                 new_categories=fillna
             )
-        gdat = gdat.fillna(value={main_var: fillna})
+            gdat = gdat.fillna(value={main_var: fillna})
+            gdat[main_var] = gdat[main_var].cat.remove_unused_categories()
+        else:
+            gdat = gdat.fillna(value={main_var: fillna})
     else:
         gdat = gdat.dropna(subset=[main_var]).copy()
 
