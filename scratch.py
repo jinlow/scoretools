@@ -53,7 +53,6 @@ from importlib import reload
 reload(scoretools.excel)
 reload(scoretools)
 
-
 df = pd.read_csv("data/score_test_dat_raw.csv")
 tbl = scoretools.single_bivar(df, "Embarked", "Survived", fillna="Missing")
 tbl2 = df.groupby(["Pclass", "Survived"])[["Fare", "Age"]].sum()
@@ -102,3 +101,17 @@ test = df.groupby(["Survived", "Pclass"]).sum()
 wb = scoretools.TableWriter("test.xlsx", overwrite=True)
 wb.write_table(test, 1, 1)
 wb.open_file()
+
+# Testing tables
+import scoretools
+import pandas as pd
+from importlib import reload
+
+reload(scoretools)
+reload(scoretools)
+
+df = pd.read_csv("data/score_test_dat_raw.csv")
+
+tst = scoretools.reporttable.ReportTable(
+    df, index="Pclass", columns="Surviveds"
+)

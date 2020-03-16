@@ -85,13 +85,13 @@ def bivar(
         The name of a variable, or list of variable names, to distribute along
         the main_var. These `extra_vars` are treated as continous fields.
     
-    break_method: string {'none', 'bins', 'percentiles', 'breaks'} or callable.
+    break_method: string {'bins', 'percentiles', 'breaks'} or callable.
         Specify the method to use to break the `main_var` argument. This can
         be a string indicating one of the predefined break methods, or a
         callable function supplied by the user where the first argument takes
         a pandas Series and returns pandas Series.
         The following methods are available, .
-            * If `none` no bins are used and all levels will be returned.
+            * If `None` no bins are used and all levels will be returned.
             * If `bins` the `main_var` will be broken into a specified number
               of even bins.
             * If `percentiles` the `main_var` will be broken into specified
@@ -101,11 +101,11 @@ def bivar(
     
     break_args: `break_method` parameters, default None.
         The parameters that will be passed into the `break_method` function.
-        If a user defined function needs multiple arguments to be input, pass
-        in an unpacked tuple of parameters, i.e. `*params_tuple`.
-        The builtin `break_methods` {'none', 'bins', 'percentiles', 'breaks'}
+        This argument is ignored if a user defined function is supplied for
+        break_method.
+        The builtin `break_methods` {'bins', 'percentiles', 'breaks'}
         have the following corresponding arguments.
-            * If `none` no paramters are necessary leave as None.
+            * If `None` no paramters are necessary leave as None.
             * If `bins` (int): Specify a single int value to specify the
               desired number of even bins.
             * If `percentiles` (iterable[float]): Specify an iterable of floats
