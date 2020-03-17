@@ -112,6 +112,4 @@ reload(scoretools)
 
 df = pd.read_csv("data/score_test_dat_raw.csv")
 
-tst = scoretools.reporttable.ReportTable(
-    df, index="Pclass", columns="Surviveds"
-)
+tst = scoretools.reporttable.ReportTable(df, index="Pclass", columns="Survived")
