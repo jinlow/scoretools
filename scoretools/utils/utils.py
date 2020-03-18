@@ -27,7 +27,7 @@ def all_integers(obj):
     return np.sum(decimals) == 0
 
 
-# Snagged from is_dict_like from pandas.core.dtypes.inference
+# Snagged is_dict_like from pandas.core.dtypes.inference
 def is_dict_like(obj):
     dict_like_attrs = ("__getitem__", "keys", "__contains__")
     return (

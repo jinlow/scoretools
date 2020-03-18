@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from typing import Iterable, List, Optional, Union, Callable, Any
-from .utils import coerce_to_iterable
+from .utils import coerce_to_iterable, is_dict_like
 from .utils import break_methods as brk
 
 
@@ -86,18 +86,19 @@ class ReportTable:
         }
 
         if not callable(break_method):
-            self.break_method = break_dict.get(break_method, None)
             assert (
                 break_args is not None
             ), "break_args cannot be None if predefined break_method used."
-            self.break_args = break_args
-            self.exceptions = exceptions
+            self.break_method = lambda x: break_dict.get(break_method, None)(
+                x, break_args, exceptions=exceptions
+            )
+        else:
+            self.break_method = break_method
 
-    # TODO: Implement functionality for dictionary of break methods and dictionary of break args
+    # TODO: Implement functionality for dictionary of break methods
+    #       and dictionary of break args
     def _apply_break_method(self):
         if self.break_method is not None:
             self.data[self.index] = self.data[self.index].apply(
-                lambda x: self.break_method(
-                    x, self.break_args, exceptions=self.exceptions
-                )
+                self.break_method
             )
