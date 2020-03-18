@@ -85,7 +85,9 @@ class ReportTable:
             "breaks": brk.breaks,
         }
 
-        if not callable(break_method):
+        if break_method is None:
+            self.break_method = lambda x: x
+        elif not callable(break_method):
             assert (
                 break_args is not None
             ), "break_args cannot be None if predefined break_method used."
