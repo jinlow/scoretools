@@ -64,9 +64,7 @@ class TableWriter:
         **kwargs,
     ):
         if workbook is not None:
-            assert (
-                not workbook.fileclosed
-            ), "Workbook supplied must not be closed."
+            assert not workbook.fileclosed, "Workbook supplied must not be closed."
             self._workbook = workbook
         # Create temporary file if no filename is given
         else:
@@ -74,9 +72,7 @@ class TableWriter:
                 tmp_filename = tempfile.NamedTemporaryFile(
                     prefix="TableWriter_Temp_", suffix=".xlsx"
                 )
-                self._workbook = xlsx.Workbook(
-                    filename=tmp_filename.name, **kwargs
-                )
+                self._workbook = xlsx.Workbook(filename=tmp_filename.name, **kwargs)
             else:
                 if overwrite:
                     not_file = True
@@ -99,11 +95,7 @@ class TableWriter:
         self.old_sheetname = None
 
     def default_format(
-        self,
-        header_color="#e5d9fc",
-        font="calibri",
-        header_fmt=None,
-        data_fmt=None,
+        self, header_color="#e5d9fc", font="calibri", header_fmt=None, data_fmt=None,
     ):
         """
         Create default format to be used in tables
@@ -367,13 +359,9 @@ class TableWriter:
         for cs in range(len(tbl.columns)):
             for rs in range(len(tbl.index)):
                 if cs in pct_idxs:
-                    worksheet.write(
-                        rs + row, cs + col, tbl.iat[rs, cs], data_fmt_pct
-                    )
+                    worksheet.write(rs + row, cs + col, tbl.iat[rs, cs], data_fmt_pct)
                 else:
-                    worksheet.write(
-                        rs + row, cs + col, tbl.iat[rs, cs], data_fmt
-                    )
+                    worksheet.write(rs + row, cs + col, tbl.iat[rs, cs], data_fmt)
 
         row += tbl.shape[0]
         self.row = row + self.between
@@ -387,9 +375,7 @@ class TableWriter:
                 worksheet = self._workbook.worksheets()[0]
             except IndexError:
                 worksheet = self._workbook.add_worksheet()
-        elif sheetname not in [
-            ws.get_name() for ws in self._workbook.worksheets()
-        ]:
+        elif sheetname not in [ws.get_name() for ws in self._workbook.worksheets()]:
             worksheet = self._workbook.add_worksheet(sheetname)
         else:
             worksheet = self._workbook.get_worksheet_by_name(sheetname)
@@ -418,11 +404,11 @@ class TableWriter:
         sys_platform = sys.platform.lower()
 
         if sys_platform == "darwin":
-            open_cmd = "open " + shlex.quote(self._workbook.filename)
-            os.system(open_cmd)
+            open_cmd = self._workbook.filename
+            os.startfile(open_cmd)
         elif sys_platform == "win32":
             open_cmd = self._workbook.filename
-            os.system(open_cmd)
+            os.startfile(os.path.normpath(open_cmd))
         else:
             warnings.warn("open_file() not supported on this OS.")
 
