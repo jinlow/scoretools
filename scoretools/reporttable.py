@@ -28,34 +28,8 @@ class ReportTable:
         The name of a variable, or list of variable names, to distribute along
         the main_var. These `extra_vars` are treated as continous fields.
     
-    break_method: string {'bins', 'percentiles', 'breaks'} or callable.
-        Specify the method to use to break the `main_var` argument. This can
-        be a string indicating one of the predefined break methods, or a
-        callable function supplied by the user where the first argument takes
-        a pandas Series and returns pandas Series.
-        The following methods are available, .
-            * If `None` no bins are used and all levels will be returned.
-            * If `bins` the `main_var` will be broken into a specified number
-              of even bins.
-            * If `percentiles` the `main_var` will be broken into specified
-              percentiles.
-            * If `breaks` the `main_var` will be broken at the cut points
-              specified.
-
-    break_args: `break_method` parameters, default None.
-        The parameters that will be passed into the `break_method` function.
-        This argument is ignored if a user defined function is supplied for
-        break_method.
-        The builtin `break_methods` {'bins', 'percentiles', 'breaks'}
-        have the following corresponding arguments.
-            * If `None` no paramters are necessary leave as None.
-            * If `bins` (int): Specify a single int value to specify the
-              desired number of even bins.
-            * If `percentiles` (iterable[float]): Specify an iterable of floats
-              of the percentiles at which to break the `main_var`. The values
-              must be in the range [0,1]
-            * If `breaks` (iterable[scalars]): Specify an iterable of scalar values
-              that define the bin edges of the `main_var` to break on.
+    break_method: function, optional
+        A function to use to break the index data.
     """
 
     def __init__(
@@ -66,8 +40,6 @@ class ReportTable:
         fillna: Optional[str] = "Missing",
         na_last: bool = False,
         break_method: Optional[str] = None,
-        break_args: Optional[Any] = None,
-        exceptions: Optional[Iterable] = None,
     ):
         # Process inputs
         self.index = coerce_to_iterable(index)
@@ -77,25 +49,6 @@ class ReportTable:
         # NA Handling
         self.fillna = fillna
         self.na_last = na_last
-
-        # Break method
-        break_dict = {
-            "bins": brk.bins,
-            "percentiles": brk.percentile,
-            "breaks": brk.breaks,
-        }
-
-        if break_method is None:
-            self.break_method = lambda x: x
-        elif not callable(break_method):
-            assert (
-                break_args is not None
-            ), "break_args cannot be None if predefined break_method used."
-            self.break_method = lambda x: break_dict.get(break_method, None)(
-                x, break_args, exceptions=exceptions
-            )
-        else:
-            self.break_method = break_method
 
     # TODO: Implement functionality for dictionary of break methods
     #       and dictionary of break args
