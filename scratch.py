@@ -6,12 +6,13 @@ import numpy as np
 df = pd.read_csv("data/score_test_dat_raw.csv")
 tbl = sts.single_bivar(df, "Embarked", "Survived", fillna="Missing")
 
+df_scr = pd.read_csv("data/score_test_dat.csv")
 
 # gplot example
-sts.gplot(df, "Survived", ["scr2", "scr1"])
-sts.gplot(df, ["Survived", "Survived2"], ["scr2", "scr1"])
-sts.gplot(df, ["Survived", "Survived2"], ["scr2", "scr1"], dof=0.2)
-sts.gplot(df, ["Survived", "Survived2"], ["scr2", "scr1"], dof=0.2)
+sts.gplot(df_scr, "Survived", ["scr2", "scr1"])
+sts.gplot(df_scr, ["Survived", "Survived2"], ["scr2", "scr1"])
+sts.gplot(df_scr, ["Survived", "Survived2"], ["scr2", "scr1"], dof=0.2)
+sts.gplot(df_scr, ["Survived", "Survived2"], ["scr2", "scr1"], dof=0.2)
 
 # Freq tab
 sts.freq_tab("Survived", data=df)
