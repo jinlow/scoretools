@@ -7,7 +7,6 @@ import warnings
 import tempfile
 import atexit
 import numpy as np
-import copy
 from typing import Optional, Iterable
 from .utils import FormatHandler
 
@@ -80,12 +79,8 @@ class TableWriter:
                     filename=tmp_filename.name, **kwargs
                 )
             else:
-                if overwrite:
-                    not_file = True
-                else:
-                    not_file = not os.path.isfile(filename)
                 assert (
-                    not_file
+                    True if overwrite else not os.path.isfile(filename)
                 ), f"{filename} exists in directory, and overwrite = False"
                 self._workbook = xlsx.Workbook(filename=filename, **kwargs)
 

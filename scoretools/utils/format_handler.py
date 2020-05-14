@@ -40,6 +40,9 @@ class FormatHandler:
             )
         return fmt
 
+    def sub_header_format(self):
+        ...
+
     def data_format(self):
         """
         Create format for data
