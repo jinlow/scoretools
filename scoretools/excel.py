@@ -63,6 +63,7 @@ class TableWriter:
         workbook: Optional[xlsx.Workbook] = None,
         **kwargs,
     ):
+        self._is_temporary = False
         if workbook is not None:
             assert (
                 not workbook.fileclosed
@@ -71,6 +72,7 @@ class TableWriter:
         # Create temporary file if no filename is given
         else:
             if filename is None:
+                self._is_temporary = True
                 tmp_filename = tempfile.NamedTemporaryFile(
                     prefix="TableWriter_Temp_", suffix=".xlsx"
                 )
@@ -431,5 +433,6 @@ class TableWriter:
         Close workbook, and output contents.
         """
         self._workbook.close()
-        atexit.register(os.remove, self._workbook.filename)
+        if self._is_temporary:
+            atexit.register(os.remove, self._workbook.filename)
         self.closed = True

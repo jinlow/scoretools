@@ -62,7 +62,7 @@ tbl2 = df.groupby(["Pclass", "Survived"])[["Fare", "Age"]].sum()
 # wb = scoretools.TableWriter("test2.xlsx")
 # twb = xlsxwriter.Workbook("test.xlsx")
 # wb = scoretools.TableWriter(options={"nan_inf_to_errors": True})
-wb = scoretools.TableWriter()
+wb = scoretools.TableWriter("test.xlsx")
 wb.write_table(tbl2, 9, 1)
 hfmrt = wb.create_format(
     {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#e5d9fc"}
@@ -100,6 +100,6 @@ wb.open_file()
 # Multi-index table
 test = df.groupby(["Survived", "Pclass"]).sum()
 
-wb = scoretools.TableWriter("test.xlsx", overwrite=True)
+wb = scoretools.TableWriter()
 wb.write_table(test, 1, 1)
 wb.open_file()
