@@ -13,14 +13,17 @@ class FormatHandler:
         self,
         workbook: xlsx.Workbook,
         header_color="#d3daea",
+        sub_header_color="#ebebeb",
         font="calibri",
         header_fmt=None,
+        sub_header_fmt=None,
         data_fmt=None,
     ):
         self.workbook = workbook
         self.header_color = header_color
         self.font = font
         self.header_fmt = header_fmt
+        self.sub_header_fmt = sub_header_fmt
         self.data_fmt = data_fmt
 
     def header_format(self):
@@ -41,7 +44,21 @@ class FormatHandler:
         return fmt
 
     def sub_header_format(self):
-        ...
+        """
+        Create header format
+        """
+        if self.sub_header_fmt is not None:
+            fmt = self.sub_header_fmt
+        else:
+            fmt = self.workbook.add_format(
+                {
+                    "bold": True,
+                    "font_name": self.font,
+                    "border": 1,
+                    "bg_color": self.sub_header_color,
+                }
+            )
+        return fmt
 
     def data_format(self):
         """

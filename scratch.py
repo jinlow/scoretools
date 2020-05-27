@@ -62,7 +62,7 @@ tbl2 = df.groupby(["Pclass", "Survived"])[["Fare", "Age"]].sum()
 # wb = scoretools.TableWriter("test2.xlsx")
 # twb = xlsxwriter.Workbook("test.xlsx")
 # wb = scoretools.TableWriter(options={"nan_inf_to_errors": True})
-wb = scoretools.TableWriter("test.xlsx")
+wb = scoretools.TableWriter()
 wb.write_table(tbl2, 9, 1)
 hfmrt = wb.create_format(
     {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#e5d9fc"}
@@ -93,7 +93,11 @@ wb.write_table(tbl, sheetname="newSheet", cond_fmt_cols=[0, 4])
 wb.write_table(tbl, 2, 2, sheetname="newSheet1")
 wb.write_table(tbl, sheetname="newSheet1")
 
+wb.start_col = 1
+wb.start_row = 1
 wb.write_table(tbl, sheetname="newSheet3")
+wb.write_table(tbl, sheetname="newSheet3")
+
 
 wb.open_file()
 

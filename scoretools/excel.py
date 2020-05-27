@@ -89,8 +89,12 @@ class TableWriter:
         self.frmt = fmt_handler.header_format()
         self.dfrmt = fmt_handler.data_format()
         self.dfrmt_pct = self._create_pct_fmt(self.dfrmt)
-        self.row = 0
-        self.col = 0
+
+        # Initial rows and column
+        self._start_row = 0
+        self._start_col = 0
+        self.row = self.start_row
+        self.col = self.start_col
         self.between = 2
         self.closed = False
         self.old_sheetname = None
@@ -163,6 +167,40 @@ class TableWriter:
         Reference to the Format object.
         """
         return self._workbook.add_format(properties)
+
+    @property
+    def start_row(self):
+        """
+        Workbook Start Row
+
+        Set the starting row to write to when a new worksheet
+        is used.
+        """
+        return self._start_row
+
+    @start_row.setter
+    def start_row(self, value):
+        assert (value >= 0) & isinstance(
+            value, int
+        ), "Start row must be an posotive integer."
+        self._start_row = value
+
+    @property
+    def start_col(self):
+        """
+        Workbook Start Column
+
+        Set the starting column to write to when a new worksheet
+        is used.
+        """
+        return self._start_col
+
+    @start_col.setter
+    def start_col(self, value):
+        assert (value >= 0) & isinstance(
+            value, int
+        ), "Start row must be an posotive integer."
+        self._start_col = value
 
     @staticmethod
     def _apply_conditional_fmts(tbl, cond_fmt_cols, col, row, worksheet):
@@ -395,8 +433,8 @@ class TableWriter:
         if (self.old_sheetname != worksheet.get_name()) and (
             self.old_sheetname is not None
         ):
-            self.row = 0
-            self.col = 0
+            self.row = self.start_row
+            self.col = self.start_row
 
         return worksheet
 
