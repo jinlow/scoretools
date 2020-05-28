@@ -7,7 +7,7 @@ import warnings
 import tempfile
 import atexit
 import numpy as np
-from typing import Optional, Iterable, Union, Dict
+from typing import Optional, Iterable, Union, Dict, List
 from .utils import FormatHandler
 
 
@@ -205,6 +205,12 @@ class TableWriter:
         if self._start_col == self.col:
             self.col = value
         self._start_col = value
+
+    def worksheet_names(self) -> List:
+        """
+        Returns the names of the worksheets in the workbooks as a list
+        """
+        return [sheet.get_name() for sheet in self._workbook.worksheets()]
 
     @staticmethod
     def _apply_conditional_fmts(

@@ -59,3 +59,11 @@ def test_table_w_multidx(small_table_multidx):
         .eq(small_table_multidx.columns.to_series())
         .all()
     )
+
+
+def test_worksheet_names(small_table):
+    wb = sts.TableWriter()
+    wb.add_worksheet("newsheet1")
+    wb.add_worksheet("newsheet2")
+    wb.add_worksheet("newsheet3")
+    assert wb.worksheet_names() == ["newsheet1", "newsheet2", "newsheet3"]
