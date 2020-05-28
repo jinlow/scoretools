@@ -60,9 +60,9 @@ tbl = scoretools.single_bivar(df, "Embarked", "Survived", fillna="Missing")
 tbl2 = df.groupby(["Pclass", "Survived"])[["Fare", "Age"]].sum()
 
 # wb = scoretools.TableWriter("test2.xlsx")
-# twb = xlsxwriter.Workbook("test.xlsx")
+# wb = xlsxwriter.Workbook("test.xlsx")
 # wb = scoretools.TableWriter(options={"nan_inf_to_errors": True})
-wb = scoretools.TableWriter()
+wb = scoretools.TableWriter("test.xlsx")
 wb.write_table(tbl2, 9, 1)
 hfmrt = wb.create_format(
     {"bold": True, "font_name": "calibri", "border": 1, "bg_color": "#e5d9fc"}
@@ -72,8 +72,11 @@ wb.write_table(tbl, 1, 1, header_fmt=hfmrt, pct_keys=None)
 # dfrmt = wb.create_format({"font_name": "Times New Roman", "border": 1})
 # new_frmt = wb._copy_format(dfrmt)
 # new_frmt.set_num_format(10)
-wb.write_table(tbl2, 9, 1)
-wb.write_table(tbl, 9, 6)
+wb.write_table(tbl2, 9, 1, cond_fmt_cols=[0])
+wb.write_table(tbl, 9, 6, cond_fmt_cols=[0, 4], conditional_type="scale")
+wb.write_table(
+    tbl, cond_fmt_cols=[0, 4], conditional_type={"type": "3_color_scale"}
+)
 
 # Add another worksheet
 worksheet = wb.add_worksheet("AnotherSheet")
@@ -107,3 +110,14 @@ test = df.groupby(["Survived", "Pclass"]).sum()
 wb = scoretools.TableWriter()
 wb.write_table(test, 1, 1)
 wb.open_file()
+
+wb2 = scoretools.TableWriter()
+# wb2.start_col = 1
+# wb2.start_row = 1
+wb2.write_table(tbl)
+wb2.write_table(tbl2)
+wb2.write_table(tbl, sheetname="newSheet")
+wb2.write_table(tbl2, sheetname="newSheet")
+wb2.write_table(tbl2, sheetname="newSheet", index=False)
+wb2.write_table(tbl, sheetname="newSheet", cond_fmt_cols=[0, 4])
+wb2.open_file()

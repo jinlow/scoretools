@@ -7,7 +7,7 @@ import warnings
 import tempfile
 import atexit
 import numpy as np
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Union, Dict
 from .utils import FormatHandler
 
 
@@ -183,6 +183,8 @@ class TableWriter:
         assert (value >= 0) & isinstance(
             value, int
         ), "Start row must be an posotive integer."
+        if self._start_row == self.row:
+            self.row = value
         self._start_row = value
 
     @property
@@ -200,13 +202,28 @@ class TableWriter:
         assert (value >= 0) & isinstance(
             value, int
         ), "Start row must be an posotive integer."
+        if self._start_col == self.col:
+            self.col = value
         self._start_col = value
 
     @staticmethod
-    def _apply_conditional_fmts(tbl, cond_fmt_cols, col, row, worksheet):
+    def _apply_conditional_fmts(
+        tbl, cond_fmt_cols, col, row, worksheet, conditional_type
+    ):
         """
         Apply conditional formats
         """
+        if conditional_type == "bar":
+            conditional_type = {"type": "data_bar"}
+        elif conditional_type == "scale":
+            conditional_type = {
+                "type": "3_color_scale",
+                "min_color": "#63BE7B",
+                "max_color": "#F8696B",
+            }
+        assert isinstance(
+            conditional_type, dict
+        ), "conditional_type must 'bar', 'scale', or a dictionart of options"
         cond_cols = np.array(cond_fmt_cols) + col
         cond_row_start = row
         cond_row_end = tbl.shape[0] + row
@@ -216,7 +233,7 @@ class TableWriter:
                 cond_col,
                 cond_row_end,
                 cond_col,
-                {"type": "3_color_scale"},
+                conditional_type,
             )
 
     @staticmethod
@@ -267,6 +284,7 @@ class TableWriter:
         sheetname: str = None,
         index: bool = True,
         cond_fmt_cols: Optional[Iterable] = None,
+        conditional_type: Union[str, Dict[str, str]] = "bar",
         pct_keys=r"percent|pct|%|rate",
         data_fmt: xlsx.format = None,
         header_fmt: xlsx.format = None,
@@ -301,6 +319,12 @@ class TableWriter:
 
         cond_fmt_cols: iterable.
             Column indexes that conditional formating should be applied to.
+
+        conditional_type: string or dict.
+            Specify the type of the conditional format, as either "bar" for
+            data bar, "scale" for 3 scale color, or a dictionary of valid
+            conditional format options, that can be used in
+            XlsxWriter.Worksheet.conditional_format().
 
         pct_keys: regular expression or stirng.
             A regular expression used to search
@@ -340,6 +364,7 @@ class TableWriter:
             header_fmt=header_fmt,
             data_fmt=data_fmt,
             cond_fmt_cols=cond_fmt_cols,
+            conditional_type=conditional_type,
             pct_keys=pct_keys,
             data_fmt_pct=data_fmt_pct,
         )
@@ -372,6 +397,7 @@ class TableWriter:
         header_fmt,
         data_fmt,
         cond_fmt_cols,
+        conditional_type,
         pct_keys,
         data_fmt_pct,
     ):
@@ -388,6 +414,7 @@ class TableWriter:
                 col=col,
                 row=row,
                 worksheet=worksheet,
+                conditional_type=conditional_type,
             )
 
         # Write header
