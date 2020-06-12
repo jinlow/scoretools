@@ -1,9 +1,7 @@
 import pandas as pd
 
 
-def freq_tab(
-    variable, data=None, fillna="Missing", na_last=False, use_name=True
-):
+def freq_tab(variable, data=None, fillna="Missing", na_last=False, use_name=True):
     """
     Create a Simple Frequency table
 
@@ -119,12 +117,7 @@ def bivar(
 
 
 def single_bivar(
-    data: pd.DataFrame,
-    main_var,
-    bivar,
-    fillna="Missing",
-    na_last=False,
-    use_name=True,
+    data: pd.DataFrame, main_var, bivar, fillna="Missing", na_last=False, use_name=True,
 ):
     """
     Single Bivar function
@@ -163,9 +156,7 @@ def single_bivar(
     gdat = data[[main_var, bivar]].copy()
     if fillna is not None:
         if gdat[main_var].dtype.name == "category":
-            gdat[main_var] = gdat[main_var].cat.add_categories(
-                new_categories=fillna
-            )
+            gdat[main_var] = gdat[main_var].cat.add_categories(new_categories=fillna)
             gdat = gdat.fillna(value={main_var: fillna})
             gdat[main_var] = gdat[main_var].cat.remove_unused_categories()
         else:
